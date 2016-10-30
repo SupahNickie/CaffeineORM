@@ -21,15 +21,15 @@ public class Row {
   public static void formTable (ResultSet rs, List<HashMap<String, Object>> table) throws SQLException {
   	if (rs == null) return;
       
-    ResultSetMetaData rsmd = rs.getMetaData();
-    int NumOfCol = rsmd.getColumnCount();
-    while (rs.next()) {
-      Row row = new Row();
-      for(int i = 1; i <= NumOfCol; i++) {
-        row.add(rsmd.getColumnName(i), rs.getObject(i));
-      }
-      table.add(row.getRow());     
-    }
+  	ResultSetMetaData rsmd = rs.getMetaData();
+  	int NumOfCol = rsmd.getColumnCount();
+  	while (rs.next()) {
+  		Row row = new Row();
+  		for(int i = 1; i <= NumOfCol; i++) {
+  			row.add(rsmd.getColumnName(i), rs.getObject(i));
+  		}
+  		table.add(row.getRow());
+  	}
   }
   
 }

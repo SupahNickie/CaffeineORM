@@ -50,4 +50,4 @@ for(CaffeineObject superU : superUser) {
 - Chainable where clauses that do not execute immediately
 - Options for limit, order, joins
 - Allow array arguments to support queries like `where first_name in ('Bob', 'Gerald')`
-- Add, update, delete, find_or_create functions
+- Create, update, delete, find_or_create functions

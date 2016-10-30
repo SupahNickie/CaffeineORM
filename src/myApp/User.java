@@ -24,7 +24,7 @@ public class User implements CaffeineObject {
 	}
 	
 	public CaffeineObject copy(CaffeineObject obj) {
-	  return new User(this);
+		return new User(this);
 	}
 	
 	public void setAttrs(ResultSet rs) throws SQLException {
@@ -41,15 +41,15 @@ public class User implements CaffeineObject {
 			case "id": this.id = (Integer)value;
 				break;
 			case "first_name": this.firstName = (String)value;
-			  break;
+				break;
 			case "last_name": this.lastName = (String)value;
 				break;
 			case "encrypted_password": this.encryptedPassword = (String)value;
 				break;
 			case "sign_in_count": this.signInCount = (Integer)value;
-			  break;
+				break;
 			case "role": this.role = (String)value;
-			  break;
+				break;
 			default: break;
 		}
 	}
