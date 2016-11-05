@@ -11,15 +11,23 @@ import java.util.HashMap;
 
 public class Tester {
 
+	@SuppressWarnings("static-access")
 	public static void main(String[] args) throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		new Caffeine(System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_URL"), System.getenv("CAFFEINE_DB_USERNAME"), System.getenv("CAFFEINE_DB_PASSWORD"));
 
+		/* Init class-level table reference */
+		User.setCaffeineReferences(User.class);
+
 		/* Single model find */
-		User singleUser = (User) User.find(2294, User.class);
+		CaffeineObject singleUser = User.find(2294); // Can also be cast to User
 		System.out.println(singleUser);
 
+		/* Chainable AR-like wheres */
+		List<CaffeineObject> results = User.where("first_name ilike 'Nick'").where("last_name ilike '?'", "Case").execute();
+		System.out.println(results);
+
 		/* AR-like find_by_sql */
-		List<CaffeineObject> admins = User.executeQuery("select * from users where role = 'super' limit 3", User.class);
+		List<CaffeineObject> admins = User.executeQuery("select * from users where role = 'super' limit 3");
 		for(CaffeineObject admin : admins) {
 			System.out.println(admin);
 		}
@@ -31,7 +39,7 @@ public class Tester {
 		Map<String, Object> optionsMap = new HashMap<String, Object>();
 		optionsMap.put("limit", 5);
 		optionsMap.put("orderBy", "created_at desc");
-		List<CaffeineObject> smithUsers = User.executeQuery("select * from users where last_name ilike ? or first_name ilike ?", list, optionsMap, User.class);
+		List<CaffeineObject> smithUsers = User.executeQuery("select * from users where last_name ilike ? or first_name ilike ?", list, optionsMap);
 		for(CaffeineObject smithUser : smithUsers) {
 			System.out.println(smithUser);
 		}
@@ -43,7 +51,7 @@ public class Tester {
 		map.put("first_name", "Elizabeth");
 		map.put("sign_in_count", 1447);
 		otherOptionsMap.put("limit", 2);
-		List<CaffeineObject> superUser = User.executeQuery(map, otherOptionsMap, User.class);
+		List<CaffeineObject> superUser = User.executeQuery(map, otherOptionsMap);
 		for(CaffeineObject superU : superUser) {
 			System.out.println(superU);
 		}
@@ -54,7 +62,7 @@ public class Tester {
 		insertArgs.add("McPhee");
 		insertArgs.add("something_else@example.com");
 		User.executeUpdate("insert into users (first_name, last_name, email) values (?, ?, ?)", insertArgs);
-		List<CaffeineObject> users = User.executeQuery("select * from users order by created_at desc limit 5", User.class);
+		List<CaffeineObject> users = User.executeQuery("select * from users order by id desc limit 5");
 		for(CaffeineObject user : users) {
 			System.out.println(user);
 		}
