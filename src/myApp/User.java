@@ -4,7 +4,7 @@ import caffeine.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class User implements CaffeineObject {
+public class User extends CaffeineObject {
 	public int id;
 	public String firstName;
 	public String lastName;
@@ -14,20 +14,7 @@ public class User implements CaffeineObject {
 
 	public User() {}
 
-	public User(User copy) {
-		id = copy.id;
-		firstName = copy.firstName;
-		lastName = copy.lastName;
-		encryptedPassword = copy.encryptedPassword;
-		signInCount = copy.signInCount;
-		role = copy.role;
-	}
-
 	public String getTableName() { return "users"; }
-
-	public CaffeineObject copy(CaffeineObject obj) {
-		return new User(this);
-	}
 
 	public void setAttrs(ResultSet rs) throws SQLException {
 		this.id = rs.getInt("id");
