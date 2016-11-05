@@ -11,31 +11,31 @@ public class User implements CaffeineObject {
 	public String encryptedPassword;
 	public int signInCount;
 	public String role;
-	
+
 	public User() {}
-	
+
 	public User(User copy) {
-		id = copy.id;		
+		id = copy.id;
 		firstName = copy.firstName;
 		lastName = copy.lastName;
 		encryptedPassword = copy.encryptedPassword;
-		signInCount = copy.signInCount;		
+		signInCount = copy.signInCount;
 		role = copy.role;
 	}
-	
+
 	public CaffeineObject copy(CaffeineObject obj) {
 		return new User(this);
 	}
-	
+
 	public void setAttrs(ResultSet rs) throws SQLException {
-		this.id = rs.getInt("id");		
+		this.id = rs.getInt("id");
 		this.firstName = rs.getString("first_name");
 		this.lastName = rs.getString("last_name");
 		this.encryptedPassword = rs.getString("encrypted_password");
 		this.signInCount = rs.getInt("sign_in_count");
 		this.role = rs.getString("role");
 	}
-	
+
 	public void setAttr(String column, Object value) {
 		switch (column) {
 			case "id": this.id = (Integer)value;
@@ -53,13 +53,13 @@ public class User implements CaffeineObject {
 			default: break;
 		}
 	}
-	
+
 	public String toString() {
-		return "firstName: " + firstName + 
-				", lastName: " + lastName + 
-				", encryptedPassword: " + encryptedPassword + 
-				", id: " + id + 
-				", signInCount: " + signInCount + 
+		return "firstName: " + firstName +
+				", lastName: " + lastName +
+				", encryptedPassword: " + encryptedPassword +
+				", id: " + id +
+				", signInCount: " + signInCount +
 				", role: " + role;
 	}
 }
