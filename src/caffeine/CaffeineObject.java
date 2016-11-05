@@ -64,7 +64,7 @@ public interface CaffeineObject {
 	}
 
 	public default List<CaffeineObject> executeQuery(Map<String, Object> args, Map<String, Object> options) throws SQLException {
-		String sql = "select * from " + this.getClass().getSimpleName().toLowerCase() + "s where ";
+		String sql = "select * from " + getTableName() + " where ";
 		List<String> keys = new ArrayList<>(args.keySet());
 		for (int i = 0; i < keys.size(); i++) {
 			sql = sql + keys.get(i) + " = ?";
@@ -84,7 +84,7 @@ public interface CaffeineObject {
 
 	public default CaffeineObject find(int i) throws SQLException {
 		Connection c = setup();
-		PreparedStatement ps = c.prepareStatement("select * from " + this.getClass().getSimpleName() + "s where id = ?");
+		PreparedStatement ps = c.prepareStatement("select * from " + getTableName() + " where id = ?");
 		ps.setInt(1, i);
 		ResultSet rs = ps.executeQuery();
 		while (rs.next()) {
@@ -106,6 +106,7 @@ public interface CaffeineObject {
 		return sql;
 	}
 
+	public String getTableName();
 	public CaffeineObject copy(CaffeineObject obj);
 	public void setAttrs(ResultSet rs) throws SQLException;
 	public void setAttr(String column, Object value);

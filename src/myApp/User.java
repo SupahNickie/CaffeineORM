@@ -23,6 +23,8 @@ public class User implements CaffeineObject {
 		role = copy.role;
 	}
 
+	public String getTableName() { return "users"; }
+
 	public CaffeineObject copy(CaffeineObject obj) {
 		return new User(this);
 	}
