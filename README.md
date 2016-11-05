@@ -19,7 +19,7 @@ Feel free to examine the `Tester.java` file in the example `myApp` package to se
 User.setCaffeineReferences(User.class);
 
 /* Single model find */
-Caffeine singleUser = User.find(2294); // Can also be cast to User
+CaffeineObject singleUser = User.find(2294); // Can also be cast to User
 System.out.println(singleUser);
 
 /* Chainable AR-like wheres */
