@@ -54,7 +54,7 @@ List<Object> insertArgs = new ArrayList<Object>();
 insertArgs.add("Grawr");
 insertArgs.add("McPhee");
 insertArgs.add("doesntmatter@something.com");
-new User().executeUpdate("insert into users (first_name, last_name, email) values (?, ?, ?)", insertArgs, null);
+new User().executeUpdate("insert into users (first_name, last_name, email) values (?, ?, ?)", insertArgs);
 List<CaffeineObject> users = new User().executeQuery("select * from users order by created_at desc limit 3");
 for(CaffeineObject user : users) {
   System.out.println(user);

@@ -20,8 +20,7 @@ public interface CaffeineObject {
 		executeUpdate(c, c.prepareStatement(sql));
 	}
 
-	public default void executeUpdate(String sql, List<Object> values, Map<String, Object> options) throws SQLException {
-		sql = appendOptions(sql, options);
+	public default void executeUpdate(String sql, List<Object> values) throws SQLException {
 		Connection c = setup();
 		PreparedStatement ps = c.prepareStatement(sql);
 		int counter = 1;
