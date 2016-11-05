@@ -48,11 +48,20 @@ List<CaffeineObject> superUser = new User().where(map, otherOptionsMap);
 for(CaffeineObject superU : superUser) {
   System.out.println(superU);
 }
+
+/* Execution of raw SQL updates */
+List<Object> insertArgs = new ArrayList<Object>();
+insertArgs.add("Grawr");
+insertArgs.add("McPhee");
+insertArgs.add("doesntmatter@something.com");
+new User().executeUpdate("insert into users (first_name, last_name, email) values (?, ?, ?)", insertArgs, null);
+List<CaffeineObject> users = new User().executeQuery("select * from users order by created_at desc limit 3");
+for(CaffeineObject user : users) {
+  System.out.println(user);
+}
 ```
 
 ##### Todos:
 - More generic iteration of the `setAttrs`, `setAttr`, and copycat constructor methods so there's less to do in the application's model classes
 - Chainable where clauses that do not execute immediately
 - Options for limit, order, joins
-- Allow array arguments to support queries like `where first_name in ('Bob', 'Gerald')`
-- Create, update, delete, find_or_create functions
