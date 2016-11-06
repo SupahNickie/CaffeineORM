@@ -137,12 +137,10 @@ public interface CaffeineObject {
 		return sql;
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	public default String baseQuery() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		String sql = "select * from ";
-		CaffeineObject klassInstance = (CaffeineObject) getCurrentClass().getConstructor().newInstance();
-    sql = sql + klassInstance.getTableName() + " where ";
-    return sql;
+		sql = sql + getTableName() + " where ";
+		return sql;
 	}
 
 	public default void resetQueryState() {

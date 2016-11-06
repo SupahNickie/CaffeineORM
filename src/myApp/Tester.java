@@ -27,6 +27,8 @@ public class Tester {
 		System.out.println(results);
 		List<CaffeineObject> results2 = downloadLookup.where("org_id = 167").execute();
 		System.out.println(results2);
+		List<CaffeineObject> results3 = userLookup.where("first_name ilike 'Bill'").where("last_name ilike '?'", "Smith").execute();
+		System.out.println(results3);
 
 		/* AR-like find_by_sql */
 		List<CaffeineObject> admins = userLookup.executeQuery("select * from users where role = 'super' limit 3");
