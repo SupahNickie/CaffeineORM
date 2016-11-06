@@ -4,7 +4,12 @@ import caffeine.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class User extends CaffeineObject {
+public class User implements CaffeineObject {
+	/* Caffeine utilities */
+	private String currentQuery;
+	private boolean firstCondition;
+
+	/* Normal model attributes */
 	public int id;
 	public String firstName;
 	public String lastName;
@@ -14,7 +19,18 @@ public class User extends CaffeineObject {
 
 	public User() {}
 
+	/* Getters */
+
+	@SuppressWarnings("rawtypes")
+	public Class getCurrentClass() { return User.class; }
 	public String getTableName() { return "users"; }
+	public String getCurrentQuery() { return this.currentQuery; }
+	public boolean getFirstCondition() { return this.firstCondition; }
+
+	/* Setters */
+
+	public void setCurrentQuery(String sql) { this.currentQuery = sql; }
+	public void setFirstCondition(Boolean bool) { this.firstCondition = bool; }
 
 	public void setAttrs(ResultSet rs) throws SQLException {
 		this.id = rs.getInt("id");
@@ -42,6 +58,8 @@ public class User extends CaffeineObject {
 			default: break;
 		}
 	}
+
+	/* Model methods */
 
 	public String toString() {
 		return "firstName: " + firstName +

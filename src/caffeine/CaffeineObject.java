@@ -4,15 +4,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.*;
 
-public abstract class CaffeineObject {
-	@SuppressWarnings("rawtypes")
-	public static Class currentClass;
-	public static String currentQuery;
-	static boolean firstCondition;
+public interface CaffeineObject {
 
 	/* Raw SQL execute, used for INSERT, UPDATE, DELETE */
 
-	public static void executeUpdate(Connection c, PreparedStatement ps) throws SQLException {
+	public default void executeUpdate(Connection c, PreparedStatement ps) throws SQLException {
 		ps.executeUpdate();
 		c.commit();
 		c.close();
@@ -20,12 +16,12 @@ public abstract class CaffeineObject {
 		teardown();
 	}
 
-	public static void executeUpdate(String sql) throws SQLException {
+	public default void executeUpdate(String sql) throws SQLException {
 		Connection c = setup();
 		executeUpdate(c, c.prepareStatement(sql));
 	}
 
-	public static void executeUpdate(String sql, List<Object> values) throws SQLException {
+	public default void executeUpdate(String sql, List<Object> values) throws SQLException {
 		Connection c = setup();
 		PreparedStatement ps = c.prepareStatement(sql);
 		int counter = 1;
@@ -39,13 +35,13 @@ public abstract class CaffeineObject {
 	/* Raw SQL query, used for SELECT */
 
 	@SuppressWarnings({ "unchecked" })
-	public static List<CaffeineObject> executeQuery(PreparedStatement ps) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default List<CaffeineObject> executeQuery(PreparedStatement ps) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		List<CaffeineObject> ret = new ArrayList<CaffeineObject>();
 		List<HashMap<String, Object>> table = new ArrayList<HashMap<String, Object>>();
 		ResultSet rs = ps.executeQuery();
 		Row.formTable(rs, table);
 		for (HashMap<String, Object> row : table) {
-			CaffeineObject newInstance = (CaffeineObject) currentClass.getConstructor().newInstance();
+			CaffeineObject newInstance = (CaffeineObject) getCurrentClass().getConstructor().newInstance();
 			for (String column: row.keySet()) {
 				newInstance.setAttr(column, row.get(column));
 		  }
@@ -55,11 +51,11 @@ public abstract class CaffeineObject {
 		return ret;
 	}
 
-	public static List<CaffeineObject> executeQuery(String sql) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default List<CaffeineObject> executeQuery(String sql) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		return executeQuery(setup().prepareStatement(sql));
 	}
 
-	public static List<CaffeineObject> executeQuery(String sql, List<Object> values, Map<String, Object> options) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default List<CaffeineObject> executeQuery(String sql, List<Object> values, Map<String, Object> options) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		sql = appendOptions(sql, options);
 		PreparedStatement ps = setup().prepareStatement(sql);
 		int counter = 1;
@@ -71,8 +67,8 @@ public abstract class CaffeineObject {
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public static List<CaffeineObject> executeQuery(Map<String, Object> args, Map<String, Object> options) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		CaffeineObject exampleInstance = (CaffeineObject) currentClass.getConstructor().newInstance();
+	public default List<CaffeineObject> executeQuery(Map<String, Object> args, Map<String, Object> options) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		CaffeineObject exampleInstance = (CaffeineObject) getCurrentClass().getConstructor().newInstance();
 		String sql = "select * from " + exampleInstance.getTableName() + " where ";
 		List<String> keys = new ArrayList<>(args.keySet());
 		for (int i = 0; i < keys.size(); i++) {
@@ -91,16 +87,16 @@ public abstract class CaffeineObject {
 
 	/* AR-like querying methods */
 
-	public static List<CaffeineObject> execute() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, SQLException {
-		List<CaffeineObject> results = executeQuery(currentQuery);
+	public default List<CaffeineObject> execute() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, SQLException {
+		List<CaffeineObject> results = executeQuery(getCurrentQuery());
 		resetQueryState();
 		return results;
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public static CaffeineObject find(int i) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default CaffeineObject find(int i) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		Connection c = setup();
-		CaffeineObject newInstance = (CaffeineObject) currentClass.getConstructor().newInstance();
+		CaffeineObject newInstance = (CaffeineObject) getCurrentClass().getConstructor().newInstance();
 		PreparedStatement ps = c.prepareStatement("select * from " + newInstance.getTableName() + " where id = ?");
 		ps.setInt(1, i);
 		ResultSet rs = ps.executeQuery();
@@ -111,22 +107,20 @@ public abstract class CaffeineObject {
 		return newInstance;
 	}
 
-	@SuppressWarnings({ "unchecked" })
-	public static CaffeineObject where(String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		if (currentQuery == null) {
-			currentQuery = baseQuery();
-			firstCondition = true;
+	public default CaffeineObject where(String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		if (getCurrentQuery() == null) {
+			setCurrentQuery(baseQuery());
+			setFirstCondition(true);
 		}
-		if (!firstCondition) { currentQuery = currentQuery + "and "; }
-		firstCondition = false;
-		currentQuery = currentQuery + condition + " ";
-		System.out.println(currentQuery);
-		CaffeineObject returnInstance = (CaffeineObject) currentClass.getConstructor().newInstance();
-		return returnInstance;
+		if (!getFirstCondition()) { setCurrentQuery(getCurrentQuery() + "and "); }
+		setFirstCondition(false);
+		setCurrentQuery(getCurrentQuery() + condition + " ");
+		System.out.println(getCurrentQuery());
+		return this;
 	}
 
 	// This is just asking to get SQL-injected at the moment
-	public static CaffeineObject where(String condition, Object placeholderValue) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default CaffeineObject where(String condition, Object placeholderValue) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		String replacedString = condition.replaceAll("[?]", placeholderValue.toString());
 		return where(replacedString);
 	}
@@ -144,22 +138,30 @@ public abstract class CaffeineObject {
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public static String baseQuery() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default String baseQuery() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		String sql = "select * from ";
-		CaffeineObject klassInstance = (CaffeineObject) currentClass.getConstructor().newInstance();
+		CaffeineObject klassInstance = (CaffeineObject) getCurrentClass().getConstructor().newInstance();
     sql = sql + klassInstance.getTableName() + " where ";
     return sql;
 	}
 
-	@SuppressWarnings({ "rawtypes" })
-	public static void setCaffeineReferences(Class klass) { currentClass = klass; }
-
-	public static void resetQueryState() {
-		currentQuery = null;
-		firstCondition = true;
+	public default void resetQueryState() {
+		setCurrentQuery(null);
+		setFirstCondition(true);
 	}
 
+	/* Getters */
+
+	@SuppressWarnings("rawtypes")
+	public abstract Class getCurrentClass();
 	public abstract String getTableName();
+	public abstract String getCurrentQuery();
+	public abstract boolean getFirstCondition();
+
+	/* Setters */
+
+	public abstract void setCurrentQuery(String sql);
+	public abstract void setFirstCondition(Boolean bool);
 	public abstract void setAttrs(ResultSet rs) throws SQLException;
 	public abstract void setAttr(String column, Object value);
 
