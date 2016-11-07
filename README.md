@@ -28,10 +28,10 @@ CaffeineObject abstract types can be cast to the subclass concrete type.
 User singleUser = (User) userLookup.find(2294);
 ```
 
-Chainable AR-like wheres; no query execution until `execute()` is called at the end.
+Chainable AR-like `where` and `or`; no query execution until `execute()` is called at the end.
 ```
 List<CaffeineObject> userResults = userLookup.where("first_name ilike 'Nick'").where("last_name ilike '?'", "Case").execute();
-List<CaffeineObject> downloadResults = downloadLookup.where("org_id = 167").execute();
+List<CaffeineObject> downloadResults = downloadLookup.where("org_id = 167").or("org_id = 4").execute();
 List<CaffeineObject> moreComplexUserResults = userLookup.where("last_name ilike '?'", "Perez").where("id > ?", 50).execute();
 ```
 

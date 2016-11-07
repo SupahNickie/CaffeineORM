@@ -106,23 +106,40 @@ public interface CaffeineObject {
 	}
 
 	public default CaffeineObject where(String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		return appendCondition("and", condition);
+	}
+
+	public default CaffeineObject where(String condition, Object placeholderValue) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		String replacedString = sanitizeParameter(condition, placeholderValue);
+		return where(replacedString);
+	}
+
+	public default CaffeineObject or(String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		return appendCondition("or", condition);
+	}
+
+	public default CaffeineObject or(String condition, Object placeholderValue) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		String replacedString = sanitizeParameter(condition, placeholderValue);
+		return or(replacedString);
+	}
+
+	/* Helper methods */
+
+	public default CaffeineObject appendCondition(String type, String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		if (getCurrentQuery() == null) {
 			setCurrentQuery(baseQuery());
 			setFirstCondition(true);
 		}
-		if (!getFirstCondition()) { setCurrentQuery(getCurrentQuery() + "and "); }
+		if (!getFirstCondition()) { setCurrentQuery(getCurrentQuery() + type + " "); }
 		setFirstCondition(false);
 		setCurrentQuery(getCurrentQuery() + condition + " ");
 		return this;
 	}
 
-	// This is just asking to get SQL-injected at the moment
-	public default CaffeineObject where(String condition, Object placeholderValue) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		String replacedString = condition.replaceAll("[?]", placeholderValue.toString());
-		return where(replacedString);
+	// TODO: Change replace method to guard against SQL injection
+	public default String sanitizeParameter(String condition, Object placeholderValue) {
+		return condition.replaceAll("[?]", placeholderValue.toString());
 	}
-
-	/* AR-like helper methods */
 
 	public static String appendOptions(String sql, Map<String, Object> options) {
 		if ((options != null) && (!options.isEmpty()) ) {
