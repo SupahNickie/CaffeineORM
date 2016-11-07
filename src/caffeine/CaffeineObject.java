@@ -66,10 +66,8 @@ public interface CaffeineObject {
 		return executeQuery(ps);
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	public default List<CaffeineObject> executeQuery(Map<String, Object> args, Map<String, Object> options) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		CaffeineObject exampleInstance = (CaffeineObject) getCurrentClass().getConstructor().newInstance();
-		String sql = "select * from " + exampleInstance.getTableName() + " where ";
+		String sql = baseQuery();
 		List<String> keys = new ArrayList<>(args.keySet());
 		for (int i = 0; i < keys.size(); i++) {
 			sql = sql + keys.get(i) + " = ?";
@@ -97,7 +95,7 @@ public interface CaffeineObject {
 	public default CaffeineObject find(int i) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		Connection c = setup();
 		CaffeineObject newInstance = (CaffeineObject) getCurrentClass().getConstructor().newInstance();
-		PreparedStatement ps = c.prepareStatement("select * from " + newInstance.getTableName() + " where id = ?");
+		PreparedStatement ps = c.prepareStatement(baseQuery() + "id = ?");
 		ps.setInt(1, i);
 		ResultSet rs = ps.executeQuery();
 		while (rs.next()) {
@@ -115,7 +113,6 @@ public interface CaffeineObject {
 		if (!getFirstCondition()) { setCurrentQuery(getCurrentQuery() + "and "); }
 		setFirstCondition(false);
 		setCurrentQuery(getCurrentQuery() + condition + " ");
-		System.out.println(getCurrentQuery());
 		return this;
 	}
 
