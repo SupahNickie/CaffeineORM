@@ -5,8 +5,9 @@ import caffeine.*;
 public class User implements CaffeineObject {
 
 	/* Caffeine utilities */
-	private String currentQuery;
-	private boolean firstCondition;
+	public static final String tableName = "users";
+	public String currentQuery;
+	public boolean firstCondition;
 
 	/* Normal model attributes; names must map to database columns
 	 * (if your db columns are lowerCamelCase, use that style) */
@@ -18,19 +19,6 @@ public class User implements CaffeineObject {
 	public String role;
 
 	public User() {}
-
-	/* Caffeine Getters */
-
-	@SuppressWarnings("rawtypes")
-	public Class getCurrentClass() { return User.class; }
-	public String getTableName() { return "users"; }
-	public String getCurrentQuery() { return this.currentQuery; }
-	public boolean getFirstCondition() { return this.firstCondition; }
-
-	/* Caffeine Setters */
-
-	public void setCurrentQuery(String sql) { this.currentQuery = sql; }
-	public void setFirstCondition(Boolean bool) { this.firstCondition = bool; }
 
 	/* Model methods */
 

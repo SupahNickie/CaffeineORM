@@ -35,14 +35,13 @@ public interface CaffeineObject {
 
 	/* Raw SQL query, used for SELECT */
 
-	@SuppressWarnings({ "unchecked" })
 	public default List<CaffeineObject> executeQuery(PreparedStatement ps) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		List<CaffeineObject> ret = new ArrayList<CaffeineObject>();
 		List<HashMap<String, Object>> table = new ArrayList<HashMap<String, Object>>();
 		ResultSet rs = ps.executeQuery();
 		Row.formTable(rs, table);
 		for (HashMap<String, Object> row : table) {
-			CaffeineObject newInstance = (CaffeineObject) getCurrentClass().getConstructor().newInstance();
+			CaffeineObject newInstance = (CaffeineObject) getClass().getConstructor().newInstance();
 			for (String column: row.keySet()) {
 				newInstance.setAttr(column, row.get(column));
 		  }
@@ -92,10 +91,9 @@ public interface CaffeineObject {
 		return results;
 	}
 
-	@SuppressWarnings({ "unchecked" })
-	public default CaffeineObject find(int i) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default CaffeineObject find(int i) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		Connection c = setup();
-		CaffeineObject newInstance = (CaffeineObject) getCurrentClass().getConstructor().newInstance();
+		CaffeineObject newInstance = (CaffeineObject) getClass().getConstructor().newInstance();
 		PreparedStatement ps = c.prepareStatement(baseQuery() + "id = ?");
 		ps.setInt(1, i);
 		ResultSet rs = ps.executeQuery();
@@ -106,27 +104,27 @@ public interface CaffeineObject {
 		return newInstance;
 	}
 
-	public default CaffeineObject where(String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default CaffeineObject where(String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		return appendCondition("and", condition);
 	}
 
-	public default CaffeineObject where(String condition, Object placeholderValue) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default CaffeineObject where(String condition, Object placeholderValue) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		String replacedString = sanitizeParameter(condition, placeholderValue);
 		return where(replacedString);
 	}
 
-	public default CaffeineObject or(String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default CaffeineObject or(String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		return appendCondition("or", condition);
 	}
 
-	public default CaffeineObject or(String condition, Object placeholderValue) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default CaffeineObject or(String condition, Object placeholderValue) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		String replacedString = sanitizeParameter(condition, placeholderValue);
 		return or(replacedString);
 	}
 
 	/* Helper methods */
 
-	public default CaffeineObject appendCondition(String type, String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default CaffeineObject appendCondition(String type, String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		if (getCurrentQuery() == null) {
 			setCurrentQuery(baseQuery());
 			setFirstCondition(true);
@@ -152,29 +150,41 @@ public interface CaffeineObject {
 		return sql;
 	}
 
-	public default String baseQuery() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default String baseQuery() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		String sql = "select * from ";
-		sql = sql + getTableName() + " where ";
+		Field field = getClass().getDeclaredField("tableName");
+		sql = sql + field.get(null) + " where ";
 		return sql;
 	}
 
-	public default void resetQueryState() {
+	public default void resetQueryState() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		setCurrentQuery(null);
 		setFirstCondition(true);
 	}
 
 	/* Getters */
 
-	@SuppressWarnings("rawtypes")
-	public abstract Class getCurrentClass();
-	public abstract String getTableName();
-	public abstract String getCurrentQuery();
-	public abstract boolean getFirstCondition();
+	public default String getCurrentQuery() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		Field field = getClass().getDeclaredField("currentQuery");
+		return (String) field.get(this);
+	}
+
+	public default  boolean getFirstCondition() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		Field field = getClass().getDeclaredField("firstCondition");
+		return (Boolean) field.get(this);
+	}
 
 	/* Setters */
 
-	public abstract void setCurrentQuery(String sql);
-	public abstract void setFirstCondition(Boolean bool);
+	public default void setCurrentQuery(String sql) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		Field field = getClass().getDeclaredField("currentQuery");
+		field.set(this, sql);
+	}
+
+	public default void setFirstCondition(Boolean bool) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		Field field = getClass().getDeclaredField("firstCondition");
+		field.set(this, bool);
+	}
 
 	public default void setAttrs(ResultSet rs) throws SQLException {
 		Field[] fields = getClass().getDeclaredFields();
