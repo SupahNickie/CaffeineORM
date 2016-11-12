@@ -73,7 +73,6 @@ List<CaffeineObject> users = userLookup.executeQuery("select * from users order 
 ```
 
 ##### Todos:
-- More generic iteration of the `setAttrs` and `setAttr` methods so there's less to do in the application's model classes
 - Joins
 - Easy associations between models
 - `create`, `update`, and `delete` methods

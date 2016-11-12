@@ -1,5 +1,6 @@
 package caffeine;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.*;
@@ -35,7 +36,7 @@ public interface CaffeineObject {
 	/* Raw SQL query, used for SELECT */
 
 	@SuppressWarnings({ "unchecked" })
-	public default List<CaffeineObject> executeQuery(PreparedStatement ps) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default List<CaffeineObject> executeQuery(PreparedStatement ps) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		List<CaffeineObject> ret = new ArrayList<CaffeineObject>();
 		List<HashMap<String, Object>> table = new ArrayList<HashMap<String, Object>>();
 		ResultSet rs = ps.executeQuery();
@@ -51,11 +52,11 @@ public interface CaffeineObject {
 		return ret;
 	}
 
-	public default List<CaffeineObject> executeQuery(String sql) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default List<CaffeineObject> executeQuery(String sql) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		return executeQuery(setup().prepareStatement(sql));
 	}
 
-	public default List<CaffeineObject> executeQuery(String sql, List<Object> values, Map<String, Object> options) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default List<CaffeineObject> executeQuery(String sql, List<Object> values, Map<String, Object> options) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		sql = appendOptions(sql, options);
 		PreparedStatement ps = setup().prepareStatement(sql);
 		int counter = 1;
@@ -66,7 +67,7 @@ public interface CaffeineObject {
 		return executeQuery(ps);
 	}
 
-	public default List<CaffeineObject> executeQuery(Map<String, Object> args, Map<String, Object> options) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public default List<CaffeineObject> executeQuery(Map<String, Object> args, Map<String, Object> options) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		String sql = baseQuery();
 		List<String> keys = new ArrayList<>(args.keySet());
 		for (int i = 0; i < keys.size(); i++) {
@@ -85,7 +86,7 @@ public interface CaffeineObject {
 
 	/* AR-like querying methods */
 
-	public default List<CaffeineObject> execute() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, SQLException {
+	public default List<CaffeineObject> execute() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, SQLException, NoSuchFieldException {
 		List<CaffeineObject> results = executeQuery(getCurrentQuery());
 		resetQueryState();
 		return results;
@@ -174,8 +175,27 @@ public interface CaffeineObject {
 
 	public abstract void setCurrentQuery(String sql);
 	public abstract void setFirstCondition(Boolean bool);
-	public abstract void setAttrs(ResultSet rs) throws SQLException;
-	public abstract void setAttr(String column, Object value);
+
+	public default void setAttrs(ResultSet rs) throws SQLException {
+		Field[] fields = getClass().getDeclaredFields();
+		for (Field f : fields) {
+			try {
+				String[] attrIdentifier = f.toString().split("\\.");
+				f.set(this, rs.getObject(attrIdentifier[attrIdentifier.length - 1]));
+			} catch (Exception e){
+				System.out.println(e);
+			}
+		}
+	}
+
+	public default void setAttr(String column, Object value) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException {
+		try {
+			Field field = getClass().getDeclaredField(column);
+			field.set(this, value);
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+	}
 
 	/* Connection handling */
 
