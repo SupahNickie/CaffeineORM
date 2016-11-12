@@ -4,6 +4,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public interface CaffeineObject {
 
@@ -104,6 +106,29 @@ public interface CaffeineObject {
 		return newInstance;
 	}
 
+	public default CaffeineObject join(String typeOfJoin, String fromJoin, String toJoin) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+		String[] fromJoins = fromJoin.split("\\.");
+		String[] toJoins = toJoin.split("\\.");
+		String sql;
+		if (getCurrentQuery() == null) {
+			sql = baseQuery();
+		} else {
+			sql = getCurrentQuery();
+		}
+		if (typeOfJoin.equals("")) {
+			typeOfJoin = "join ";
+		} else {
+			typeOfJoin = typeOfJoin + " join ";
+		}
+		sql = sql + " " + typeOfJoin + toJoins[0] + " on " + toJoins[0] + "." + toJoins[1] + " = " + fromJoins[0] + "." + fromJoins[1];
+		setCurrentQuery(sql);
+		return this;
+	}
+
+	public default CaffeineObject join(String fromJoin, String toJoin) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException { 
+		return join("", fromJoin, toJoin);
+	}
+
 	public default CaffeineObject where(String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		return appendCondition("and", condition);
 	}
@@ -125,8 +150,10 @@ public interface CaffeineObject {
 	/* Helper methods */
 
 	public default CaffeineObject appendCondition(String type, String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
-		if (getCurrentQuery() == null) {
-			setCurrentQuery(baseQuery());
+		Pattern p = Pattern.compile("(where)");
+		Matcher m = p.matcher(getCurrentQuery());
+		if ( !m.find() ) {
+			if (getCurrentQuery() == null) setCurrentQuery(baseQuery());
 			setFirstCondition(true);
 		}
 		if ( getFirstCondition() ) { 
