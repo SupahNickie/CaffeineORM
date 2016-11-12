@@ -150,12 +150,12 @@ public interface CaffeineObject {
 	/* Helper methods */
 
 	public default CaffeineObject appendCondition(String type, String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
-		Pattern p = Pattern.compile("(where)");
-		Matcher m = p.matcher(getCurrentQuery());
-		if ( !m.find() ) {
-			if (getCurrentQuery() == null) setCurrentQuery(baseQuery());
-			setFirstCondition(true);
+		if (getCurrentQuery() == null) {
+			setCurrentQuery(baseQuery());
 		}
+		Pattern p = Pattern.compile("where");
+		Matcher m = p.matcher(getCurrentQuery());
+		if ( !m.find() ) setFirstCondition(true);
 		if ( getFirstCondition() ) { 
 			setCurrentQuery(getCurrentQuery() + " where ");
 		} else {
@@ -182,9 +182,9 @@ public interface CaffeineObject {
 	}
 
 	public default String baseQuery() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
-		String sql = "select * from ";
 		Field field = getClass().getDeclaredField("tableName");
-		sql = sql + field.get(null);
+		String tableName = (String) field.get(null);
+		String sql = "select " + tableName + ".* from " + tableName;
 		return sql;
 	}
 

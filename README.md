@@ -35,6 +35,14 @@ List<CaffeineObject> downloadResults = downloadLookup.where("org_id = 167").or("
 List<CaffeineObject> moreComplexUserResults = userLookup.where("last_name ilike '?'", "Perez").where("id > ?", 50).execute();
 ```
 
+Chainable AR-like `join` methods; specify (or don't) what type of join you would like. Default join is "join", which behaves like an inner join.
+```
+// select downloads.* from downloads join users on users.id = downloads.user_id where users.email ilike 'example1@somethingnew.com'
+List<CaffeineObject> moreResults = downloadLookup.join("downloads.user_id", "users.id").where("users.email ilike '?'", "example1@somethingnew.com");
+// select users.* from users join accounts on accounts.creator_id = user_id left outer join partners on partners.id = accounts.partner_id where partners.name = 'Huge Corporation'
+List<CaffeineObject> multipleJoins = userLookup.join("users.id", "accounts.creator_id").join("left outer", "accounts.partner_id", "partners.id").where("partners.name = 'Huge Corporation'");
+```
+
 Raw SQL with immediate execution.
 ```
 List<CaffeineObject> admins = userLookup.executeQuery("select * from users where role = 'super' limit 3");
@@ -73,6 +81,5 @@ List<CaffeineObject> users = userLookup.executeQuery("select * from users order 
 ```
 
 ##### Todos:
-- Joins
 - Easy associations between models
 - `create`, `update`, and `delete` methods
