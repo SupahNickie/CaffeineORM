@@ -94,7 +94,7 @@ public interface CaffeineObject {
 	public default CaffeineObject find(int i) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		Connection c = setup();
 		CaffeineObject newInstance = (CaffeineObject) getClass().getConstructor().newInstance();
-		PreparedStatement ps = c.prepareStatement(baseQuery() + "id = ?");
+		PreparedStatement ps = c.prepareStatement(baseQuery() + " where id = ?");
 		ps.setInt(1, i);
 		ResultSet rs = ps.executeQuery();
 		while (rs.next()) {
@@ -129,7 +129,11 @@ public interface CaffeineObject {
 			setCurrentQuery(baseQuery());
 			setFirstCondition(true);
 		}
-		if (!getFirstCondition()) { setCurrentQuery(getCurrentQuery() + type + " "); }
+		if ( getFirstCondition() ) { 
+			setCurrentQuery(getCurrentQuery() + " where ");
+		} else {
+			setCurrentQuery(getCurrentQuery() + type + " ");
+		}
 		setFirstCondition(false);
 		setCurrentQuery(getCurrentQuery() + condition + " ");
 		return this;
@@ -153,7 +157,7 @@ public interface CaffeineObject {
 	public default String baseQuery() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		String sql = "select * from ";
 		Field field = getClass().getDeclaredField("tableName");
-		sql = sql + field.get(null) + " where ";
+		sql = sql + field.get(null);
 		return sql;
 	}
 
