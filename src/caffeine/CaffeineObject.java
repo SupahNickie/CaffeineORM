@@ -35,6 +35,17 @@ public interface CaffeineObject {
 		executeUpdate(c, ps);
 	}
 
+	public default void executeUpdate(String sql, Map<String, Object> args, Object[] argKeys) throws SQLException {
+		Connection c = setup();
+		PreparedStatement ps = c.prepareStatement(sql);
+		int counter = 1;
+		for (int i = 0; i < argKeys.length; i++) {
+			ps.setObject(counter, args.get(argKeys[i]));
+			counter++;
+		}
+		executeUpdate(c, ps);
+	}
+
 	/* Raw SQL query, used for SELECT */
 
 	public default List<CaffeineObject> executeQuery(PreparedStatement ps) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
@@ -147,7 +158,87 @@ public interface CaffeineObject {
 		return or(replacedString);
 	}
 
+	/* Create, Update, Delete methods */
+
+	public default boolean create(Map<String, Object> args) {
+		try {
+			Object[] argKeys = args.keySet().toArray();
+			String sql = insertInsertPlaceholders(args, argKeys);
+			executeUpdate(sql, args, argKeys);
+			updateThisAttrs(args, argKeys);
+			return true;
+		} catch (Exception e) {
+			System.out.println(e);
+			return false;
+		}
+	}
+
+	public default boolean update(Map<String, Object> args) {
+		try {
+			Field tableNameField = getClass().getDeclaredField("tableName");
+			Field field = getClass().getDeclaredField("id");
+			String tableName = (String) tableNameField.get(null);
+			int id = field.getInt(this);
+			String sql = "update " + tableName + " set ";
+			Object[] argKeys = args.keySet().toArray();
+			sql = insertUpdatePlaceholders(sql, args, argKeys);
+			sql = sql + " where id = " + id;
+			executeUpdate(sql, args, argKeys);
+			updateThisAttrs(args, argKeys);
+			return true;
+		} catch (Exception e) {
+			System.out.println(e);
+			return false;
+		}
+	}
+
+	public default boolean delete() {
+		try {
+			Field tableNameField = getClass().getDeclaredField("tableName");
+			Field field = getClass().getDeclaredField("id");
+			String tableName = (String) tableNameField.get(null);
+			int id = field.getInt(this);
+			String sql = "delete from " + tableName + " where id = " + id;
+			executeUpdate(sql);
+			return true;
+		} catch (Exception e) {
+			System.out.println(e);
+			return false;
+		}
+	}
+
 	/* Helper methods */
+
+	public default void updateThisAttrs(Map<String, Object> args, Object[] argKeys) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException {
+		for (int i = 0; i < argKeys.length; i++) {
+			this.setAttr((String) argKeys[i], args.get(argKeys[i]));
+		}
+	}
+
+	public default String insertInsertPlaceholders(Map<String, Object> args, Object[] argKeys) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		Field tableNameField = getClass().getDeclaredField("tableName");
+		String tableName = (String) tableNameField.get(null);
+		String sql = "insert into " + tableName + " (";
+		for (int i = 0; i < argKeys.length; i++) {
+			sql = sql + argKeys[i];
+			if (i != argKeys.length - 1) { sql = sql + ", "; }
+		}
+		sql = sql + ") values (";
+		for (int j = 0; j < argKeys.length; j++) {
+			sql = sql + "?";
+			if (j != argKeys.length - 1) { sql = sql + ", "; }
+		}
+		sql = sql + ")";
+		return sql;
+	}
+
+	public default String insertUpdatePlaceholders(String sql, Map<String, Object> args, Object[] argKeys) {
+		for (int i = 0; i < argKeys.length; i++) {
+			sql = sql + argKeys[i] + " = ?";
+			if (i != argKeys.length - 1) { sql = sql + ", "; }
+		}
+		return sql;
+	}
 
 	public default CaffeineObject appendCondition(String type, String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		if (getCurrentQuery() == null) {
