@@ -8,6 +8,7 @@ public class Download implements CaffeineObject {
 	public static final String tableName = "downloads";
 	public String currentQuery;
 	public boolean firstCondition;
+	public String validationErrors = "";
 
 	/* Normal model attributes; names must map to database columns
 	 * (if your db columns are lowerCamelCase, use that style) */
@@ -20,6 +21,7 @@ public class Download implements CaffeineObject {
 	/* Validations */
 
 	public boolean validate(String validationType) {
+		validationErrors = "";
 		return true;
 	}
 

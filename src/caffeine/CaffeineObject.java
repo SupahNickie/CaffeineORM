@@ -169,7 +169,7 @@ public interface CaffeineObject {
 				updateThisAttrs(args, argKeys);
 				return true;
 			} else {
-				System.out.println("Failed validation; please run the 'checkValidations()' method to see errors.");
+				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
 				return false;
 			}
 		} catch (Exception e) {
@@ -187,7 +187,7 @@ public interface CaffeineObject {
 				updateThisAttrs(args, argKeys);
 				return true;
 			} else {
-				System.out.println("Failed validation; please run the 'checkValidations()' method to see errors.");
+				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
 				return false;
 			}
 		} catch (Exception e) {
@@ -285,6 +285,12 @@ public interface CaffeineObject {
 	/* validationType being either "update" or "create" */
 	public abstract boolean validate(String validationType);
 
+	public default String getValidationErrors() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		Field field = getClass().getDeclaredField("validationErrors");
+		String errors = (String) field.get(this);
+		return errors;
+	}
+
 	public default String baseQuery() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		Field field = getClass().getDeclaredField("tableName");
 		String tableName = (String) field.get(null);
@@ -304,7 +310,7 @@ public interface CaffeineObject {
 		return (String) field.get(this);
 	}
 
-	public default  boolean getFirstCondition() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	public default boolean getFirstCondition() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		Field field = getClass().getDeclaredField("firstCondition");
 		return (Boolean) field.get(this);
 	}

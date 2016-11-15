@@ -8,6 +8,7 @@ public class User implements CaffeineObject {
 	public static final String tableName = "users";
 	public String currentQuery;
 	public boolean firstCondition;
+	public String validationErrors = "";
 
 	/* Normal model attributes; names must map to database columns
 	 * (if your db columns are lowerCamelCase, use that style) */
@@ -23,6 +24,7 @@ public class User implements CaffeineObject {
 	/* Validations */
 
 	public boolean validate(String validationType) {
+		validationErrors = "";
 		if (validationType == "create") {
 			return createValidations();
 		} else {
