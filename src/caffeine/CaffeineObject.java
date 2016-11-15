@@ -162,11 +162,16 @@ public interface CaffeineObject {
 
 	public default boolean create(Map<String, Object> args) {
 		try {
-			Object[] argKeys = args.keySet().toArray();
-			String sql = insertInsertPlaceholders(args, argKeys);
-			executeUpdate(sql, args, argKeys);
-			updateThisAttrs(args, argKeys);
-			return true;
+			if (validate("create")) {
+				Object[] argKeys = args.keySet().toArray();
+				String sql = insertInsertPlaceholders(args, argKeys);
+				executeUpdate(sql, args, argKeys);
+				updateThisAttrs(args, argKeys);
+				return true;
+			} else {
+				System.out.println("Failed validation; please run the 'checkValidations()' method to see errors.");
+				return false;
+			}
 		} catch (Exception e) {
 			System.out.println(e);
 			return false;
@@ -175,17 +180,16 @@ public interface CaffeineObject {
 
 	public default boolean update(Map<String, Object> args) {
 		try {
-			Field tableNameField = getClass().getDeclaredField("tableName");
-			Field field = getClass().getDeclaredField("id");
-			String tableName = (String) tableNameField.get(null);
-			int id = field.getInt(this);
-			String sql = "update " + tableName + " set ";
-			Object[] argKeys = args.keySet().toArray();
-			sql = insertUpdatePlaceholders(sql, args, argKeys);
-			sql = sql + " where id = " + id;
-			executeUpdate(sql, args, argKeys);
-			updateThisAttrs(args, argKeys);
-			return true;
+			if (validate("update")) {
+				Object[] argKeys = args.keySet().toArray();
+				String sql = insertUpdatePlaceholders(args, argKeys);
+				executeUpdate(sql, args, argKeys);
+				updateThisAttrs(args, argKeys);
+				return true;
+			} else {
+				System.out.println("Failed validation; please run the 'checkValidations()' method to see errors.");
+				return false;
+			}
 		} catch (Exception e) {
 			System.out.println(e);
 			return false;
@@ -232,11 +236,17 @@ public interface CaffeineObject {
 		return sql;
 	}
 
-	public default String insertUpdatePlaceholders(String sql, Map<String, Object> args, Object[] argKeys) {
+	public default String insertUpdatePlaceholders(Map<String, Object> args, Object[] argKeys) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		Field tableNameField = getClass().getDeclaredField("tableName");
+		Field field = getClass().getDeclaredField("id");
+		String tableName = (String) tableNameField.get(null);
+		int id = field.getInt(this);
+		String sql = "update " + tableName + " set ";
 		for (int i = 0; i < argKeys.length; i++) {
 			sql = sql + argKeys[i] + " = ?";
 			if (i != argKeys.length - 1) { sql = sql + ", "; }
 		}
+		sql = sql + " where id = " + id;
 		return sql;
 	}
 
@@ -271,6 +281,9 @@ public interface CaffeineObject {
 		}
 		return sql;
 	}
+
+	/* validationType being either "update" or "create" */
+	public abstract boolean validate(String validationType);
 
 	public default String baseQuery() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
 		Field field = getClass().getDeclaredField("tableName");

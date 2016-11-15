@@ -17,6 +17,12 @@ public class Download implements CaffeineObject {
 
 	public Download() {}
 
+	/* Validations */
+
+	public boolean validate(String validationType) {
+		return true;
+	}
+
 	/* Model Methods */
 
 	public String toString() {

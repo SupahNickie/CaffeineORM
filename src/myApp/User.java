@@ -20,6 +20,24 @@ public class User implements CaffeineObject {
 
 	public User() {}
 
+	/* Validations */
+
+	public boolean validate(String validationType) {
+		if (validationType == "create") {
+			return createValidations();
+		} else {
+			return updateValidations();
+		}
+	}
+
+	public boolean createValidations() {
+		return true;
+	}
+
+	public boolean updateValidations() {
+		return true;
+	}
+
 	/* Model methods */
 
 	public String toString() {
