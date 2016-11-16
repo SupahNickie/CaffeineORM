@@ -1,6 +1,8 @@
 package myApp;
 
 import caffeine.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Download implements CaffeineObject {
 
@@ -9,6 +11,7 @@ public class Download implements CaffeineObject {
 	public String currentQuery;
 	public boolean firstCondition;
 	public String validationErrors = "";
+	public List<Object> placeholders = new ArrayList<Object>();
 
 	/* Normal model attributes; names must map to database columns
 	 * (if your db columns are lowerCamelCase, use that style) */

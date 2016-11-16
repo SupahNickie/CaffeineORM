@@ -99,7 +99,12 @@ public interface CaffeineObject {
 	/* AR-like querying methods */
 
 	public default List<CaffeineObject> execute() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, SQLException, NoSuchFieldException {
-		List<CaffeineObject> results = executeQuery(getCurrentQuery());
+		String sql = getCurrentQuery();
+		PreparedStatement ps = setup().prepareStatement(sql);
+		for (int i = 1; i <= getPlaceholders().size(); i++) {
+			ps.setObject(i, getPlaceholders().get(i - 1));
+		}
+		List<CaffeineObject> results = executeQuery(ps);
 		resetQueryState();
 		return results;
 	}
@@ -145,8 +150,8 @@ public interface CaffeineObject {
 	}
 
 	public default CaffeineObject where(String condition, Object placeholderValue) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
-		String replacedString = sanitizeParameter(condition, placeholderValue);
-		return where(replacedString);
+		getPlaceholders().add(placeholderValue);
+		return where(condition);
 	}
 
 	public default CaffeineObject or(String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
@@ -154,8 +159,8 @@ public interface CaffeineObject {
 	}
 
 	public default CaffeineObject or(String condition, Object placeholderValue) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
-		String replacedString = sanitizeParameter(condition, placeholderValue);
-		return or(replacedString);
+		getPlaceholders().add(placeholderValue);
+		return or(condition);
 	}
 
 	/* Create, Update, Delete methods */
@@ -267,11 +272,6 @@ public interface CaffeineObject {
 		return this;
 	}
 
-	// TODO: Change replace method to guard against SQL injection
-	public default String sanitizeParameter(String condition, Object placeholderValue) {
-		return condition.replaceAll("[?]", placeholderValue.toString());
-	}
-
 	public static String appendOptions(String sql, Map<String, Object> options) {
 		if ((options != null) && (!options.isEmpty()) ) {
 			sql = sql + " ";
@@ -299,11 +299,18 @@ public interface CaffeineObject {
 	}
 
 	public default void resetQueryState() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		setPlaceholders(new ArrayList<Object>());
 		setCurrentQuery(null);
 		setFirstCondition(true);
 	}
 
 	/* Getters */
+
+	@SuppressWarnings("unchecked")
+	public default List<Object> getPlaceholders() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		Field field = getClass().getDeclaredField("placeholders");
+		return (List<Object>) field.get(this);
+	}
 
 	public default String getCurrentQuery() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		Field field = getClass().getDeclaredField("currentQuery");
@@ -316,6 +323,11 @@ public interface CaffeineObject {
 	}
 
 	/* Setters */
+
+	public default void setPlaceholders(List<Object> placeholders) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		Field field = getClass().getDeclaredField("placeholders");
+		field.set(this, placeholders);
+	}
 
 	public default void setCurrentQuery(String sql) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		Field field = getClass().getDeclaredField("currentQuery");
