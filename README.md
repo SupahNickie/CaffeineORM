@@ -80,6 +80,23 @@ userLookup.executeUpdate("insert into users (first_name, last_name, email) value
 List<CaffeineObject> users = userLookup.executeQuery("select * from users order by id desc limit 5");
 ```
 
+Inserts, updates, and deletes can also be handled in a more AR-like format. The object `create` and `update` calls are performed on will have the inserted attributes on itself after execution.
+```
+Map<String, Object> createArgs = new HashMap<String, Object>();
+insertArgs.put("email", "superexample@example.com");
+insertArgs.put("first_name", "Stephen");
+User newlyInstantiatedUser = new User();
+boolean createdOrNot = newlyInstantiatedUser.create(insertArgs);
+
+// Oops, I misspelled his first name; let's update the user.
+insertArgs.put("first_name", "Steven");
+boolean updatedOrNot = newlyInstantiatedUser.update(insertArgs);
+
+// Never mind, let's delete him.
+boolean deletedOrNot = newlyInstantiatedUser.delete();
+```
+
+Validations are handled with a handle into the `validate` abstract method on the implementing models. Please examine the User or Download example models for implementation details.
+
 ##### Todos:
 - Easy associations between models
-- `create`, `update`, and `delete` methods
