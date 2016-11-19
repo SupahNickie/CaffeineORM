@@ -70,6 +70,15 @@ otherOptionsMap.put("limit", 2);
 List<CaffeineObject> superUser = userLookup.executeQuery(map, otherOptionsMap);
 ```
 
+Associated models are set in a static block at the class level, then Caffeine knows how to query using a simple `getAssociated` method. See the provided example User and Download classes for more context.
+```
+CaffeineObject user = userLookup.find(37);
+List<CaffeineObject> downloadsBelongingToThisUser = user.getAssociated(downloadLookup);
+
+CaffeineObject download = downloadLookup.find(1341);
+List<CaffeineObject> userThatHasThisDownload = download.getAssociated(userLookup);
+```
+
 Inserts, updates, and deletes are handled with execution of raw SQL updates.
 ```
 List<Object> insertArgs = new ArrayList<Object>();
