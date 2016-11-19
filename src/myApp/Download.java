@@ -28,6 +28,7 @@ public class Download implements CaffeineObject {
 	public int id;
 	public int org_id;
 	public String file_file_name;
+	public int user_id;
 
 	public Download() {}
 
@@ -43,6 +44,7 @@ public class Download implements CaffeineObject {
 	public String toString() {
 		return "fileName: " + file_file_name +
 				", id: " + id +
-				", orgId: " + org_id;
+				", orgId: " + org_id +
+				", userId: " + user_id;
 	}
 }

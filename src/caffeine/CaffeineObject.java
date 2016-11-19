@@ -190,13 +190,11 @@ public interface CaffeineObject {
 	}
 
 	public default List<CaffeineObject> getBelongsTo(CaffeineObject associatedLookup) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SQLException, ClassNotFoundException {
-		Field tableNameField = getClass().getDeclaredField("tableName");
 		Field associatedTableNameField = associatedLookup.getClass().getDeclaredField("tableName");
-		Field field = getClass().getDeclaredField("id");
-		String tableName = (String) tableNameField.get(null);
 		String associatedTableName = (String) associatedTableNameField.get(null);
+		Field field = getClass().getDeclaredField(associatedTableName.substring(0, associatedTableName.length() -1) + "_id");
 		int id = field.getInt(this);
-		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " join " + tableName + " on " + tableName + "." + associatedTableName.substring(0, associatedTableName.length() - 1) + "_id = " + associatedTableName + ".id where " + tableName + ".id = " + id;
+		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where " + associatedTableName + ".id = " + id;
 		return associatedLookup.executeQuery(sql);
 	}
 
