@@ -165,21 +165,15 @@ public interface CaffeineObject {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public default List<CaffeineObject> getAssociated(CaffeineObject associatedLookup) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SQLException, ClassNotFoundException {
-		try {
-			List<Class> hasManyAssociations = (List<Class>) getClass().getDeclaredField("hasMany").get(null);
-			if (hasManyAssociations.contains(associatedLookup.getClass())) {
+		Map<Class, String> associations = (Map<Class, String>) getClass().getDeclaredField("caffeineAssociations").get(null);
+		String type = associations.get(associatedLookup.getClass());
+		switch (type) {
+			case "hasMany":
 				return getHasMany(associatedLookup);
-			}
-		} catch (Exception e) {
-			// Do nothing
-		}
-		try {
-			List<Class> belongsToAssociations = (List<Class>) getClass().getDeclaredField("belongsTo").get(null);
-			if (belongsToAssociations.contains(associatedLookup.getClass())) {
+			case "belongsTo":
 				return getBelongsTo(associatedLookup);
-			}
-		} catch (Exception e) {
-			// Do nothing
+			default:
+				break;
 		}
 		return null;
 	}

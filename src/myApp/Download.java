@@ -3,6 +3,8 @@ package myApp;
 import caffeine.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Download implements CaffeineObject {
 
@@ -15,10 +17,10 @@ public class Download implements CaffeineObject {
 
 	// Associations
 	@SuppressWarnings("rawtypes")
-	public static List<Class> belongsTo = new ArrayList<Class>();
+	public static Map<Class, String> caffeineAssociations = new HashMap<Class, String>();
 
 	static {
-		belongsTo.add(User.class);
+		caffeineAssociations.put(User.class, "belongsTo");
 	}
 
 	/* Normal model attributes; names must map to database columns
