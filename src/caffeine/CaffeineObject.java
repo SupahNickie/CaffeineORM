@@ -163,6 +163,49 @@ public interface CaffeineObject {
 		return or(condition);
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public default List<CaffeineObject> getAssociated(CaffeineObject associatedLookup) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SQLException, ClassNotFoundException {
+		try {
+			List<Class> hasManyAssociations = (List<Class>) getClass().getDeclaredField("hasMany").get(null);
+			if (hasManyAssociations.contains(associatedLookup.getClass())) {
+				return getHasMany(associatedLookup);
+			}
+		} catch (Exception e) {
+			// Do nothing
+		}
+		try {
+			List<Class> belongsToAssociations = (List<Class>) getClass().getDeclaredField("belongsTo").get(null);
+			if (belongsToAssociations.contains(associatedLookup.getClass())) {
+				return getBelongsTo(associatedLookup);
+			}
+		} catch (Exception e) {
+			// Do nothing
+		}
+		return null;
+	}
+
+	public default List<CaffeineObject> getHasMany(CaffeineObject associatedLookup) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SQLException, ClassNotFoundException {
+		Field tableNameField = getClass().getDeclaredField("tableName");
+		Field associatedTableNameField = associatedLookup.getClass().getDeclaredField("tableName");
+		Field field = getClass().getDeclaredField("id");
+		String tableName = (String) tableNameField.get(null);
+		String associatedTableName = (String) associatedTableNameField.get(null);
+		int id = field.getInt(this);
+		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where " + tableName.substring(0, tableName.length() - 1) + "_id = " + id;
+		return associatedLookup.executeQuery(sql);
+	}
+
+	public default List<CaffeineObject> getBelongsTo(CaffeineObject associatedLookup) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SQLException, ClassNotFoundException {
+		Field tableNameField = getClass().getDeclaredField("tableName");
+		Field associatedTableNameField = associatedLookup.getClass().getDeclaredField("tableName");
+		Field field = getClass().getDeclaredField("id");
+		String tableName = (String) tableNameField.get(null);
+		String associatedTableName = (String) associatedTableNameField.get(null);
+		int id = field.getInt(this);
+		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " join " + tableName + " on " + tableName + "." + associatedTableName.substring(0, associatedTableName.length() - 1) + "_id = " + associatedTableName + ".id where " + tableName + ".id = " + id;
+		return associatedLookup.executeQuery(sql);
+	}
+
 	/* Create, Update, Delete methods */
 
 	public default boolean create(Map<String, Object> args) {
@@ -346,7 +389,7 @@ public interface CaffeineObject {
 				String[] attrIdentifier = f.toString().split("\\.");
 				f.set(this, rs.getObject(attrIdentifier[attrIdentifier.length - 1]));
 			} catch (Exception e){
-				System.out.println(e);
+				// Do nothing
 			}
 		}
 	}
@@ -356,7 +399,7 @@ public interface CaffeineObject {
 			Field field = getClass().getDeclaredField(column);
 			field.set(this, value);
 		} catch (Exception e) {
-			System.out.println(e);
+			// Do nothing
 		}
 	}
 

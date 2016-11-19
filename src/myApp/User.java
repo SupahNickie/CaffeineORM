@@ -13,6 +13,14 @@ public class User implements CaffeineObject {
 	public String validationErrors = "";
 	public List<Object> placeholders = new ArrayList<Object>();
 
+	// Associations
+	@SuppressWarnings("rawtypes")
+	public static List<Class> hasMany = new ArrayList<Class>();
+
+	static {
+		hasMany.add(Download.class);
+	}
+
 	/* Normal model attributes; names must map to database columns
 	 * (if your db columns are lowerCamelCase, use that style) */
 	public int id;

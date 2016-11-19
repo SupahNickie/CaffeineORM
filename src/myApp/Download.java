@@ -13,6 +13,14 @@ public class Download implements CaffeineObject {
 	public String validationErrors = "";
 	public List<Object> placeholders = new ArrayList<Object>();
 
+	// Associations
+	@SuppressWarnings("rawtypes")
+	public static List<Class> belongsTo = new ArrayList<Class>();
+
+	static {
+		belongsTo.add(User.class);
+	}
+
 	/* Normal model attributes; names must map to database columns
 	 * (if your db columns are lowerCamelCase, use that style) */
 	public int id;
