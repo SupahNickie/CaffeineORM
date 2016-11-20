@@ -163,38 +163,43 @@ public interface CaffeineObject {
 		return or(condition);
 	}
 
+	public default List<CaffeineObject> getAssociated(CaffeineObject associatedLookup) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, ClassNotFoundException, SQLException {
+		return getAssociated(associatedLookup, null);
+	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public default List<CaffeineObject> getAssociated(CaffeineObject associatedLookup) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SQLException, ClassNotFoundException {
+	public default List<CaffeineObject> getAssociated(CaffeineObject associatedLookup, String foreignKey) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SQLException, ClassNotFoundException {
 		Map<Class, String> associations = (Map<Class, String>) getClass().getDeclaredField("caffeineAssociations").get(null);
 		String type = associations.get(associatedLookup.getClass());
 		switch (type) {
 			case "hasMany":
-				return getHasMany(associatedLookup);
+				return getHasMany(associatedLookup, foreignKey);
 			case "belongsTo":
-				return getBelongsTo(associatedLookup);
+				return getBelongsTo(associatedLookup, foreignKey);
 			default:
 				break;
 		}
 		return null;
 	}
 
-	public default List<CaffeineObject> getHasMany(CaffeineObject associatedLookup) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SQLException, ClassNotFoundException {
+	public default List<CaffeineObject> getHasMany(CaffeineObject associatedLookup, String foreignKey) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SQLException, ClassNotFoundException {
 		Field tableNameField = getClass().getDeclaredField("tableName");
 		Field associatedTableNameField = associatedLookup.getClass().getDeclaredField("tableName");
 		Field field = getClass().getDeclaredField("id");
 		String tableName = (String) tableNameField.get(null);
 		String associatedTableName = (String) associatedTableNameField.get(null);
 		int id = field.getInt(this);
-		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where " + tableName.substring(0, tableName.length() - 1) + "_id = " + id;
+		String foreignLookup = (foreignKey == null) ? tableName.substring(0, tableName.length() - 1) + "_id" : foreignKey;
+		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where " + foreignLookup + " = " + id;
 		return associatedLookup.executeQuery(sql);
 	}
 
-	public default List<CaffeineObject> getBelongsTo(CaffeineObject associatedLookup) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SQLException, ClassNotFoundException {
+	public default List<CaffeineObject> getBelongsTo(CaffeineObject associatedLookup, String foreignKey) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SQLException, ClassNotFoundException {
 		Field associatedTableNameField = associatedLookup.getClass().getDeclaredField("tableName");
 		String associatedTableName = (String) associatedTableNameField.get(null);
-		Field field = getClass().getDeclaredField(associatedTableName.substring(0, associatedTableName.length() -1) + "_id");
+		Field field = (foreignKey == null) ? getClass().getDeclaredField(associatedTableName.substring(0, associatedTableName.length() -1) + "_id") : getClass().getDeclaredField(foreignKey);
 		int id = field.getInt(this);
-		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where " + associatedTableName + ".id = " + id;
+		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where id = " + id;
 		return associatedLookup.executeQuery(sql);
 	}
 

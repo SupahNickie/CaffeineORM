@@ -70,13 +70,23 @@ otherOptionsMap.put("limit", 2);
 List<CaffeineObject> superUser = userLookup.executeQuery(map, otherOptionsMap);
 ```
 
-Associated models are set in a static block at the class level, then Caffeine knows how to query using a simple `getAssociated` method. See the provided example User and Download classes for more context.
+Associated models are set in a static block at the class level, then Caffeine knows how to query using a simple `getAssociated` method. Foreign keys are an optional second argument to the `getAssociated` function. See the provided example User and Download classes for more context.
 ```
 CaffeineObject user = userLookup.find(37);
 List<CaffeineObject> downloadsBelongingToThisUser = user.getAssociated(downloadLookup);
+// select downloads.* from downloads where user_id = 37
+
+CaffeineObject user = userLookup.find(37);
+List<CaffeineObject> downloadsThisUserOrganizedInstead = user.getAssociated(downloadLookup, "org_id");
+// select downloads.* from downloads where org_id = 37
 
 CaffeineObject download = downloadLookup.find(1341);
 List<CaffeineObject> userThatHasThisDownload = download.getAssociated(userLookup);
+// select users.* from users where id = 3 (the user_id of download with id 1341)
+
+CaffeineObject download = downloadLookup.find(1341);
+List<CaffeineObject userThatOrganizedThisDownloadInstead = download.getAssociated(userLookup, "org_id");
+// select users.* from users where id = 741 (the org_id of download with id 1341)
 ```
 
 Inserts, updates, and deletes are handled with execution of raw SQL updates.
@@ -108,4 +118,4 @@ boolean deletedOrNot = newlyInstantiatedUser.delete();
 Validations are handled with a handle into the `validate` abstract method on the implementing models. Please examine the User or Download example models for implementation details.
 
 ##### Todos:
-- Easy associations between models
+- jUnit tests
