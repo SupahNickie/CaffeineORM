@@ -1,4 +1,4 @@
-package myApp;
+package supahnickie.testClasses;
 
 import supahnickie.caffeine.*;
 
