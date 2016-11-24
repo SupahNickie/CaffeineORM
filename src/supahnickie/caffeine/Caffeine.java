@@ -60,8 +60,5 @@ public final class Caffeine {
 				e.printStackTrace();
 			}
 		}
-
-
 	}
-
 }

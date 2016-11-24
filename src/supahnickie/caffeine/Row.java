@@ -31,5 +31,4 @@ public class Row {
 			table.add(row.getRow());
 		}
 	}
-
 }

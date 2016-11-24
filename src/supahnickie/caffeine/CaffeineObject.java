@@ -415,5 +415,4 @@ public interface CaffeineObject {
 		ps.close();
 		teardown();
 	}
-
 }
