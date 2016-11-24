@@ -117,5 +117,6 @@ boolean deletedOrNot = newlyInstantiatedUser.delete();
 
 Validations are handled with a handle into the `validate` abstract method on the implementing models. Please examine the User or Download example models for implementation details.
 
-##### Todos:
-- jUnit tests
+#### Tests
+
+Tests are located in the supahnickie.caffeineTester package. To run the tests for yourself, create a blank test database and assign it to the `CAFFEINE_DB_TEST_URL` environment variable. Other environment variables needed to run the tests are `CAFFEINE_DB_DRIVER`, `CAFFEINE_DB_USERNAME`, and `CAFFEINE_DB_PASSWORD`.
