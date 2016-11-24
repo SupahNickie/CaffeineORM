@@ -16,25 +16,10 @@ public class CaffeineTest {
 		// The database must already exist, but should be blank otherwise.
 		new Caffeine(System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL"), System.getenv("CAFFEINE_DB_USERNAME"), System.getenv("CAFFEINE_DB_PASSWORD"));
 		databaseHandle = new User();
-		databaseHandle.executeUpdate("drop table if exists users");
-		databaseHandle.executeUpdate("drop table if exists downloads");
-		databaseHandle.executeUpdate("create table if not exists users (" +
-			"id integer not null, " +
-			"first_name varchar(255), " +
-			"last_name varchar(255), " +
-			"encrypted_password varchar(255), " +
-			"sign_in_count integer, " +
-			"role varchar(255))"
-		);
-		databaseHandle.executeUpdate("create table if not exists downloads (" +
-			"id integer not null, " +
-			"file_file_name varchar(255), " +
-			"org_id integer, " +
-			"user_id integer)"
-		);
-		insertUsers();
 		userLookup = new User();
 		downloadLookup = new Download();
+		insertTables();
+		insertUsers();
 	}
 
 	@Test
@@ -55,6 +40,25 @@ public class CaffeineTest {
 	}
 
 	// Test helper methods
+
+	public void insertTables() throws Exception {
+		databaseHandle.executeUpdate("drop table if exists users");
+		databaseHandle.executeUpdate("drop table if exists downloads");
+		databaseHandle.executeUpdate("create table if not exists users (" +
+			"id integer not null, " +
+			"first_name varchar(255), " +
+			"last_name varchar(255), " +
+			"encrypted_password varchar(255), " +
+			"sign_in_count integer, " +
+			"role varchar(255))"
+		);
+		databaseHandle.executeUpdate("create table if not exists downloads (" +
+			"id integer not null, " +
+			"file_file_name varchar(255), " +
+			"org_id integer, " +
+			"user_id integer)"
+		);
+	}
 
 	private void insertUsers() throws Exception {
 		databaseHandle.executeUpdate("insert into users (id, first_name, last_name) values (13, 'Nick', 'Case')");
