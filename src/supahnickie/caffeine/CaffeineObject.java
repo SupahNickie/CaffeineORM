@@ -1,4 +1,4 @@
-package caffeine;
+package supahnickie.caffeine;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -302,7 +302,7 @@ public interface CaffeineObject {
 		Pattern p = Pattern.compile("where");
 		Matcher m = p.matcher(getCurrentQuery());
 		if ( !m.find() ) setFirstCondition(true);
-		if ( getFirstCondition() ) { 
+		if ( getFirstCondition() ) {
 			setCurrentQuery(getCurrentQuery() + " where ");
 		} else {
 			setCurrentQuery(getCurrentQuery() + type + " ");

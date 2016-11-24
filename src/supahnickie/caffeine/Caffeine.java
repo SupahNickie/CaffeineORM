@@ -1,4 +1,4 @@
-package caffeine;
+package supahnickie.caffeine;
 
 import java.sql.*;
 

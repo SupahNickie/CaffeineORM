@@ -1,6 +1,7 @@
 package myApp;
 
-import caffeine.*;
+import supahnickie.caffeine.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
