@@ -27,19 +27,18 @@ public class CaffeineTest {
 			"role varchar(255))"
 		);
 		databaseHandle.executeUpdate("create table if not exists downloads (" +
-				"id integer not null, " +
-				"file_file_name varchar(255), " +
-				"org_id integer, " +
-				"user_id integer)"
-			);
+			"id integer not null, " +
+			"file_file_name varchar(255), " +
+			"org_id integer, " +
+			"user_id integer)"
+		);
+		insertUsers();
 		userLookup = new User();
 		downloadLookup = new Download();
 	}
 
 	@Test
 	public void find() throws Exception {
-		databaseHandle.executeUpdate("insert into users (id, first_name, last_name) values (13, 'Nick', 'Case')");
-		databaseHandle.executeUpdate("insert into users (id, first_name, last_name) values (5, 'Grawr', 'McPhee')");
 		User user = (User) userLookup.find(13);
 		assertEquals("ids should match", user.id, 13);
 		assertEquals("first name should match", user.first_name, "Nick");
@@ -53,5 +52,12 @@ public class CaffeineTest {
 	public void tearDown() throws Exception {
 		databaseHandle.executeUpdate("drop table if exists users");
 		databaseHandle.executeUpdate("drop table if exists downloads");
+	}
+
+	// Test helper methods
+
+	private void insertUsers() throws Exception {
+		databaseHandle.executeUpdate("insert into users (id, first_name, last_name) values (13, 'Nick', 'Case')");
+		databaseHandle.executeUpdate("insert into users (id, first_name, last_name) values (5, 'Grawr', 'McPhee')");
 	}
 }
