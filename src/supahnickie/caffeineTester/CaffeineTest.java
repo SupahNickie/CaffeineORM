@@ -3,6 +3,7 @@ package supahnickie.caffeineTester;
 import static org.junit.Assert.*;
 
 import org.junit.*;
+import java.util.List;
 import supahnickie.caffeine.*;
 import supahnickie.testClasses.*;
 
@@ -20,6 +21,17 @@ public class CaffeineTest {
 		downloadLookup = new Download();
 		insertTables();
 		insertUsers();
+	}
+
+	@Test
+	public void executeUpdate() throws Exception {
+		downloadLookup.executeUpdate("insert into downloads (id, org_id, file_file_name) values (15, 13, 'download1'), (16, 13, 'download2')");
+		List<CaffeineObject> downloads = downloadLookup.executeQuery("select * from downloads where id in (15, 16)");
+		Download download15 = (Download) downloads.get(0);
+		Download download16 = (Download) downloads.get(1);
+		assertArrayEquals("returned downloads should match expected ids", new int[] {download15.id, download16.id}, new int[] {15, 16});
+		assertArrayEquals("returned downloads should match expected file names", new String[] {download15.file_file_name, download16.file_file_name}, new String[] {"download1", "download2"});
+		assertArrayEquals("returned downloads should match expected org_ids", new int[] {download15.org_id, download16.org_id}, new int[] {13, 13});
 	}
 
 	@Test
