@@ -1,7 +1,6 @@
 package supahnickie.caffeine;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -15,7 +14,7 @@ public abstract class CaffeineObject {
 
 	/* Raw SQL execute, used for INSERT, UPDATE, DELETE */
 
-	public final void executeUpdate(Connection c, PreparedStatement ps) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	private final void executeUpdate(Connection c, PreparedStatement ps) throws Exception {
 		ps.executeUpdate();
 		c.commit();
 		c.close();
@@ -23,12 +22,12 @@ public abstract class CaffeineObject {
 		teardown();
 	}
 
-	public final void executeUpdate(String sql) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public final void executeUpdate(String sql) throws Exception {
 		Connection c = setup();
 		executeUpdate(c, c.prepareStatement(sql));
 	}
 
-	public final void executeUpdate(String sql, List<Object> values) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	public final void executeUpdate(String sql, List<Object> values) throws Exception {
 		Connection c = setup();
 		PreparedStatement ps = c.prepareStatement(sql);
 		int counter = 1;
@@ -39,7 +38,7 @@ public abstract class CaffeineObject {
 		executeUpdate(c, ps);
 	}
 
-	public final CaffeineObject executeUpdate(Connection c, PreparedStatement ps, boolean returning) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
+	private final CaffeineObject executeUpdate(Connection c, PreparedStatement ps, boolean returning) throws Exception {
 		if (returning) {
 			ps.executeUpdate();
 			c.commit();
@@ -54,7 +53,7 @@ public abstract class CaffeineObject {
 		}
 	}
 
-	public final CaffeineObject executeUpdate(String sql, Map<String, Object> args, Object[] argKeys) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
+	private final CaffeineObject executeUpdate(String sql, Map<String, Object> args, Object[] argKeys) throws Exception {
 		Connection c = setup();
 		PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 		int counter = 1;
@@ -67,7 +66,7 @@ public abstract class CaffeineObject {
 
 	/* Raw SQL query, used for SELECT */
 
-	public final List<CaffeineObject> executeQuery(PreparedStatement ps) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
+	private final List<CaffeineObject> executeQuery(PreparedStatement ps) throws Exception {
 		List<CaffeineObject> ret = new ArrayList<CaffeineObject>();
 		List<HashMap<String, Object>> table = new ArrayList<HashMap<String, Object>>();
 		ResultSet rs = ps.executeQuery();
@@ -83,11 +82,11 @@ public abstract class CaffeineObject {
 		return ret;
 	}
 
-	public final List<CaffeineObject> executeQuery(String sql) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
+	public final List<CaffeineObject> executeQuery(String sql) throws Exception {
 		return executeQuery(setup().prepareStatement(sql));
 	}
 
-	public final List<CaffeineObject> executeQuery(String sql, List<Object> values, Map<String, Object> options) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
+	public final List<CaffeineObject> executeQuery(String sql, List<Object> values, Map<String, Object> options) throws Exception {
 		sql = appendOptions(sql, options);
 		PreparedStatement ps = setup().prepareStatement(sql);
 		int counter = 1;
@@ -98,7 +97,7 @@ public abstract class CaffeineObject {
 		return executeQuery(ps);
 	}
 
-	public final List<CaffeineObject> executeQuery(Map<String, Object> args, Map<String, Object> options) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
+	public final List<CaffeineObject> executeQuery(Map<String, Object> args, Map<String, Object> options) throws Exception {
 		String sql = baseQuery() + " where ";
 		List<String> keys = new ArrayList<>(args.keySet());
 		for (int i = 0; i < keys.size(); i++) {
@@ -117,7 +116,7 @@ public abstract class CaffeineObject {
 
 	/* AR-like querying methods */
 
-	public final List<CaffeineObject> execute() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, SQLException, NoSuchFieldException {
+	public final List<CaffeineObject> execute() throws Exception {
 		String sql = getCurrentQuery();
 		PreparedStatement ps = setup().prepareStatement(sql);
 		for (int i = 1; i <= getPlaceholders().size(); i++) {
@@ -128,7 +127,7 @@ public abstract class CaffeineObject {
 		return results;
 	}
 
-	public final CaffeineObject find(int i) throws SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
+	public final CaffeineObject find(int i) throws Exception {
 		Connection c = setup();
 		CaffeineObject newInstance = (CaffeineObject) getClass().getConstructor().newInstance();
 		PreparedStatement ps = c.prepareStatement(baseQuery() + " where id = ?");
@@ -141,7 +140,7 @@ public abstract class CaffeineObject {
 		return newInstance;
 	}
 
-	public final CaffeineObject join(String typeOfJoin, String fromJoin, String toJoin) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+	public final CaffeineObject join(String typeOfJoin, String fromJoin, String toJoin) throws Exception {
 		String[] fromJoins = fromJoin.split("\\.");
 		String[] toJoins = toJoin.split("\\.");
 		String sql;
@@ -160,34 +159,34 @@ public abstract class CaffeineObject {
 		return this;
 	}
 
-	public final CaffeineObject join(String fromJoin, String toJoin) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException { 
+	public final CaffeineObject join(String fromJoin, String toJoin) throws Exception { 
 		return join("", fromJoin, toJoin);
 	}
 
-	public final CaffeineObject where(String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
+	public final CaffeineObject where(String condition) throws Exception {
 		return appendCondition("and", condition);
 	}
 
-	public final CaffeineObject where(String condition, Object placeholderValue) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
+	public final CaffeineObject where(String condition, Object placeholderValue) throws Exception {
 		getPlaceholders().add(placeholderValue);
 		return where(condition);
 	}
 
-	public final CaffeineObject or(String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
+	public final CaffeineObject or(String condition) throws Exception {
 		return appendCondition("or", condition);
 	}
 
-	public final CaffeineObject or(String condition, Object placeholderValue) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
+	public final CaffeineObject or(String condition, Object placeholderValue) throws Exception {
 		getPlaceholders().add(placeholderValue);
 		return or(condition);
 	}
 
-	public final List<CaffeineObject> getAssociated(CaffeineObject associatedLookup) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, ClassNotFoundException, SQLException {
+	public final List<CaffeineObject> getAssociated(CaffeineObject associatedLookup) throws Exception {
 		return getAssociated(associatedLookup, null);
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public final List<CaffeineObject> getAssociated(CaffeineObject associatedLookup, String foreignKey) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SQLException, ClassNotFoundException {
+	public final List<CaffeineObject> getAssociated(CaffeineObject associatedLookup, String foreignKey) throws Exception, SQLException, ClassNotFoundException {
 		Map<Class, String> associations = (Map<Class, String>) getClass().getDeclaredField("caffeineAssociations").get(null);
 		String type = associations.get(associatedLookup.getClass());
 		switch (type) {
@@ -201,7 +200,7 @@ public abstract class CaffeineObject {
 		return null;
 	}
 
-	public final List<CaffeineObject> getHasMany(CaffeineObject associatedLookup, String foreignKey) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SQLException, ClassNotFoundException {
+	private final List<CaffeineObject> getHasMany(CaffeineObject associatedLookup, String foreignKey) throws Exception {
 		Field tableNameField = getClass().getDeclaredField("tableName");
 		Field associatedTableNameField = associatedLookup.getClass().getDeclaredField("tableName");
 		Field field = getClass().getDeclaredField("id");
@@ -213,7 +212,7 @@ public abstract class CaffeineObject {
 		return associatedLookup.executeQuery(sql);
 	}
 
-	public final List<CaffeineObject> getBelongsTo(CaffeineObject associatedLookup, String foreignKey) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SQLException, ClassNotFoundException {
+	private final List<CaffeineObject> getBelongsTo(CaffeineObject associatedLookup, String foreignKey) throws Exception {
 		Field associatedTableNameField = associatedLookup.getClass().getDeclaredField("tableName");
 		String associatedTableName = (String) associatedTableNameField.get(null);
 		Field field = (foreignKey == null) ? getClass().getDeclaredField(associatedTableName.substring(0, associatedTableName.length() -1) + "_id") : getClass().getDeclaredField(foreignKey);
@@ -273,13 +272,7 @@ public abstract class CaffeineObject {
 
 	/* Helper methods */
 
-	public final void updateThisAttrs(Map<String, Object> args, Object[] argKeys) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException {
-		for (int i = 0; i < argKeys.length; i++) {
-			this.setAttr((String) argKeys[i], args.get(argKeys[i]));
-		}
-	}
-
-	public final String insertInsertPlaceholders(Map<String, Object> args, Object[] argKeys) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	private final String insertInsertPlaceholders(Map<String, Object> args, Object[] argKeys) throws Exception {
 		Field tableNameField = getClass().getDeclaredField("tableName");
 		String tableName = (String) tableNameField.get(null);
 		String sql = "insert into " + tableName + " (";
@@ -296,7 +289,7 @@ public abstract class CaffeineObject {
 		return sql;
 	}
 
-	public final String insertUpdatePlaceholders(Map<String, Object> args, Object[] argKeys) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	private final String insertUpdatePlaceholders(Map<String, Object> args, Object[] argKeys) throws Exception {
 		Field tableNameField = getClass().getDeclaredField("tableName");
 		Field field = getClass().getDeclaredField("id");
 		String tableName = (String) tableNameField.get(null);
@@ -310,7 +303,7 @@ public abstract class CaffeineObject {
 		return sql;
 	}
 
-	public final CaffeineObject appendCondition(String type, String condition) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
+	private final CaffeineObject appendCondition(String type, String condition) throws Exception {
 		if (getCurrentQuery() == null) {
 			setCurrentQuery(baseQuery());
 		}
@@ -327,7 +320,7 @@ public abstract class CaffeineObject {
 		return this;
 	}
 
-	public static String appendOptions(String sql, Map<String, Object> options) {
+	private static String appendOptions(String sql, Map<String, Object> options) {
 		if ((options != null) && (!options.isEmpty()) ) {
 			sql = sql + " ";
 			if (options.containsKey("groupBy")) { sql = sql + "group by " + options.get("groupBy") + " "; }
@@ -340,20 +333,20 @@ public abstract class CaffeineObject {
 	/* validationType being either "update" or "create" */
 	public abstract boolean validate(String validationType);
 
-	public final String getValidationErrors() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	public final String getValidationErrors() throws Exception {
 		Field field = getClass().getDeclaredField("validationErrors");
 		String errors = (String) field.get(this);
 		return errors;
 	}
 
-	public final String baseQuery() throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
+	private final String baseQuery() throws Exception {
 		Field field = getClass().getDeclaredField("tableName");
 		String tableName = (String) field.get(null);
 		String sql = "select " + tableName + ".* from " + tableName;
 		return sql;
 	}
 
-	public final void resetQueryState() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	private final void resetQueryState() throws Exception {
 		setPlaceholders(new ArrayList<Object>());
 		setCurrentQuery(null);
 		setFirstCondition(true);
@@ -361,33 +354,33 @@ public abstract class CaffeineObject {
 
 	/* Getters */
 
-	public final List<Object> getPlaceholders() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	public final List<Object> getPlaceholders() throws Exception {
 		return this.placeholders;
 	}
 
-	public final String getCurrentQuery() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	public final String getCurrentQuery() throws Exception {
 		return this.currentQuery;
 	}
 
-	public final boolean getFirstCondition() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	public final boolean getFirstCondition() throws Exception {
 		return this.firstCondition;
 	}
 
 	/* Setters */
 
-	public final void setPlaceholders(List<Object> placeholders) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	public final void setPlaceholders(List<Object> placeholders) throws Exception {
 		this.placeholders = placeholders;
 	}
 
-	public final void setCurrentQuery(String sql) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	public final void setCurrentQuery(String sql) throws Exception {
 		this.currentQuery = sql;
 	}
 
-	public final void setFirstCondition(Boolean bool) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	public final void setFirstCondition(Boolean bool) throws Exception {
 		this.firstCondition = bool;
 	}
 
-	public final void setAttrs(ResultSet rs) throws SQLException {
+	private final void setAttrs(ResultSet rs) throws Exception {
 		Field[] fields = getClass().getDeclaredFields();
 		for (Field f : fields) {
 			try {
@@ -399,7 +392,7 @@ public abstract class CaffeineObject {
 		}
 	}
 
-	public final void setAttrsFromSqlReturn(ResultSet rs) throws SQLException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException {
+	private final void setAttrsFromSqlReturn(ResultSet rs) throws Exception {
 		if (rs.next()) {
 			ResultSetMetaData rsmd = rs.getMetaData();
 			int numOfCol = rsmd.getColumnCount();
@@ -409,7 +402,7 @@ public abstract class CaffeineObject {
 		}
 	}
 
-	public final void setAttr(String column, Object value) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException {
+	private final void setAttr(String column, Object value) throws Exception {
 		try {
 			Field field = getClass().getDeclaredField(column);
 			field.set(this, value);
@@ -420,15 +413,15 @@ public abstract class CaffeineObject {
 
 	/* Connection handling */
 
-	public final static Connection setup() {
+	private final static Connection setup() {
 		return Caffeine.caffeine.setup();
 	}
 
-	public final static void teardown() {
+	private final static void teardown() {
 		Caffeine.caffeine.teardown();
 	}
 
-	public final static void teardown(ResultSet rs, PreparedStatement ps) throws SQLException {
+	private final static void teardown(ResultSet rs, PreparedStatement ps) throws Exception {
 		rs.close();
 		ps.close();
 		teardown();
