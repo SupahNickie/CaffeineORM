@@ -2,19 +2,13 @@ package supahnickie.testClasses;
 
 import supahnickie.caffeine.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Download implements CaffeineObject {
+public class Download extends CaffeineObject {
 
 	/* Caffeine utilities */
 	public static final String tableName = "downloads";
-	public String currentQuery;
-	public boolean firstCondition;
-	public String validationErrors = "";
-	public List<Object> placeholders = new ArrayList<Object>();
 
 	// Associations
 	@SuppressWarnings("rawtypes")

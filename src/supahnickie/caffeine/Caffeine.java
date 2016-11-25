@@ -12,16 +12,16 @@ public final class Caffeine {
 		connector = new DBConnection(driver, url, username, password);
 	}
 
-	public Connection setup() {
+	public final Connection setup() {
 		if (connection == null) { setConnection(); }
 		return this.connection;
 	}
 
-	public void setConnection() {
+	public final void setConnection() {
 		connection = connector.openConnection();
 	}
 
-	public void teardown() {
+	public final void teardown() {
 		connection = null;
 		connector.closeConnection();
 	}
@@ -40,7 +40,7 @@ public final class Caffeine {
 			this.password = password;
 		}
 
-		public Connection openConnection() {
+		public final Connection openConnection() {
 			c = null;
 			try {
 				Class.forName(this.driver);
@@ -53,7 +53,7 @@ public final class Caffeine {
 			}
 		}
 
-		public void closeConnection() {
+		public final void closeConnection() {
 			try {
 				c.close();
 			} catch (SQLException e) {
