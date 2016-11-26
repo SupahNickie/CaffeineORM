@@ -23,36 +23,36 @@ public class CaffeineTest {
 		List<CaffeineObject> downloads = downloadLookup.executeQuery("select * from downloads where id in (15, 16)");
 		Download download15 = (Download) downloads.get(0);
 		Download download16 = (Download) downloads.get(1);
-		assertArrayEquals("returned downloads should match expected ids", new int[] {download15.id, download16.id}, new int[] {15, 16});
-		assertArrayEquals("returned downloads should match expected file names", new String[] {download15.file_file_name, download16.file_file_name}, new String[] {"download1", "download2"});
-		assertArrayEquals("returned downloads should match expected org_ids", new int[] {download15.org_id, download16.org_id}, new int[] {1, 1});
+		assertArrayEquals("returned downloads should match expected ids", new int[] {15, 16}, new int[] {download15.id, download16.id});
+		assertArrayEquals("returned downloads should match expected file names", new String[] {"download1", "download2"}, new String[] {download15.file_file_name, download16.file_file_name});
+		assertArrayEquals("returned downloads should match expected org_ids", new int[] {1, 1}, new int[] {download15.org_id, download16.org_id});
 	}
 
 	@Test
 	public void executeUpdateWithListArgs() throws Exception {
 		Download download = (Download) downloadLookup.find(1);
-		assertEquals("file_file_name should match seed before transformation", download.file_file_name, "FileTest num 1");
-		assertEquals("org_id should match seed before transformation", download.org_id, 2);
+		assertEquals("file_file_name should match seed before transformation", "FileTest num 1", download.file_file_name);
+		assertEquals("org_id should match seed before transformation", 2, download.org_id);
 		List<Object> args = new ArrayList<Object>();
 		args.add("RenamedFile");
 		args.add(3);
 		args.add(1);
 		downloadLookup.executeUpdate("update downloads set (file_file_name, org_id) = (?, ?) where id = ?", args);
 		download = (Download) downloadLookup.find(1);
-		assertEquals("file_file_name should be changed to reflect the update", download.file_file_name, "RenamedFile");
-		assertEquals("org_id should should be changed to reflect the update", download.org_id, 3);
+		assertEquals("file_file_name should be changed to reflect the update", "RenamedFile", download.file_file_name);
+		assertEquals("org_id should should be changed to reflect the update", 3, download.org_id);
 	}
 
 	@Test
 	public void executeQuery() throws Exception {
 		List<CaffeineObject> downloads = downloadLookup.executeQuery("select * from downloads");
-		assertEquals("size of return array should match seeds", downloads.size(), 4);
+		assertEquals("size of return array should match seeds", 4, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
-		assertEquals("download1 file name should match seed", download1.file_file_name, "FileTest num 1");
-		assertEquals("download1 org_id should match seed", download1.org_id, 2);
-		assertEquals("download2 file name should match seed", download2.file_file_name, "FileTest num 2");
-		assertEquals("download2 org_id should match seed", download2.org_id, 1);
+		assertEquals("download1 file name should match seed", "FileTest num 1", download1.file_file_name);
+		assertEquals("download1 org_id should match seed", 2, download1.org_id);
+		assertEquals("download2 file name should match seed", "FileTest num 2", download2.file_file_name);
+		assertEquals("download2 org_id should match seed", 1, download2.org_id);
 	}
 
 	@Test
@@ -61,13 +61,13 @@ public class CaffeineTest {
 		args.add("FileTest num 2");
 		args.add(2);
 		List<CaffeineObject> downloads = downloadLookup.executeQuery("select * from downloads where file_file_name = ? or org_id = ? order by id asc", args);
-		assertEquals("size of return array should match expected return", downloads.size(), 3);
+		assertEquals("size of return array should match expected return", 3, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
-		assertEquals("download1 file name should match seed", download1.file_file_name, "FileTest num 1");
-		assertEquals("download1 org_id should match seed", download1.org_id, 2);
-		assertEquals("download2 file name should match seed", download2.file_file_name, "FileTest num 2");
-		assertEquals("download2 org_id should match seed", download2.org_id, 1);
+		assertEquals("download1 file name should match seed", "FileTest num 1", download1.file_file_name);
+		assertEquals("download1 org_id should match seed", 2, download1.org_id);
+		assertEquals("download2 file name should match seed", "FileTest num 2", download2.file_file_name);
+		assertEquals("download2 org_id should match seed", 1, download2.org_id);
 	}
 
 	@Test
@@ -79,10 +79,10 @@ public class CaffeineTest {
 		options.put("limit", 1);
 		options.put("orderBy", "id asc");
 		List<CaffeineObject> downloads = downloadLookup.executeQuery("select * from downloads where file_file_name = ? or org_id = ?", args, options);
-		assertEquals("size of return array should match expected return", downloads.size(), 1);
+		assertEquals("size of return array should match expected return", 1, downloads.size());
 		Download download1 = (Download) downloads.get(0);
-		assertEquals("download1 file name should match seed", download1.file_file_name, "FileTest num 3");
-		assertEquals("download1 org_id should match seed", download1.org_id, 2);
+		assertEquals("download1 file name should match seed", "FileTest num 3", download1.file_file_name);
+		assertEquals("download1 org_id should match seed", 2, download1.org_id);
 	}
 
 	@Test
@@ -91,10 +91,10 @@ public class CaffeineTest {
 		args.put("file_file_name", "FileTest num 4");
 		args.put("org_id", 3);
 		List<CaffeineObject> downloads = downloadLookup.executeQuery(args);
-		assertEquals("size of return array should match expected return", downloads.size(), 1);
+		assertEquals("size of return array should match expected return", 1, downloads.size());
 		Download download1 = (Download) downloads.get(0);
-		assertEquals("download1 file name should match seed", download1.file_file_name, "FileTest num 4");
-		assertEquals("download1 org_id should match seed", download1.org_id, 3);
+		assertEquals("download1 file name should match seed", "FileTest num 4", download1.file_file_name);
+		assertEquals("download1 org_id should match seed", 3, download1.org_id);
 	}
 
 	@Test
@@ -106,10 +106,10 @@ public class CaffeineTest {
 		options.put("limit", 1);
 		options.put("orderBy", "id asc");
 		List<CaffeineObject> downloads = downloadLookup.executeQuery(args, options);
-		assertEquals("size of return array should match expected return", downloads.size(), 1);
+		assertEquals("size of return array should match expected return", 1, downloads.size());
 		Download download1 = (Download) downloads.get(0);
-		assertEquals("download1 file name should match seed", download1.file_file_name, "FileTest num 3");
-		assertEquals("download1 org_id should match seed", download1.org_id, 2);
+		assertEquals("download1 file name should match seed", "FileTest num 3", download1.file_file_name);
+		assertEquals("download1 org_id should match seed", 2, download1.org_id);
 	}
 
 	@Test
@@ -121,7 +121,7 @@ public class CaffeineTest {
 		options.put("limit", 1);
 		options.put("orderBy", "id asc");
 		List<CaffeineObject> downloads = downloadLookup.executeQuery(args, options);
-		assertEquals("size of return array should match expected return", downloads.size(), 0);
+		assertEquals("size of return array should match expected return", 0, downloads.size());
 	}
 
 	// AR-like methods tests
@@ -129,12 +129,246 @@ public class CaffeineTest {
 	@Test
 	public void find() throws Exception {
 		User user = (User) userLookup.find(2);
-		assertEquals("ids should match", user.id, 2);
-		assertEquals("first name should match", user.first_name, "Nick");
-		assertEquals("last name should match", user.last_name, "Case");
-		assertNotEquals("ids should not match others", user.id, 1);
-		assertNotEquals("first name should not match others", user.first_name, "Grawr");
-		assertNotEquals("last name should not match others", user.last_name, "McPhee");
+		assertEquals("ids should match", 2, user.id);
+		assertEquals("first name should match", "Nick", user.first_name);
+		assertEquals("last name should match", "Case", user.last_name);
+		assertNotEquals("ids should not match others", 1, user.id);
+		assertNotEquals("first name should not match others", "Grawr", user.first_name);
+		assertNotEquals("last name should not match others", "McPhee", user.last_name);
+	}
+
+	@Test
+	public void findWithNonexistentUser() throws Exception {
+		User user = (User) userLookup.find(8);
+		assertEquals("returned object id should be 0", 0, user.id);
+		assertEquals("returned object first_name should be null", null, user.first_name);
+		assertEquals("returned object last_name should be null", null, user.last_name);
+	}
+
+	@Test
+	public void join() throws Exception {
+		List<CaffeineObject> downloads = downloadLookup.join("downloads.user_id", "users.id").where("users.id = ?", 3).execute();
+		assertEquals("size of return list should match expected", 1, downloads.size());
+		Download download = (Download) downloads.get(0);
+		assertEquals("id should match expected", 2, download.id);
+		assertEquals("file name should match expected", "FileTest num 2", download.file_file_name);
+		assertEquals("user_id should match expected", 3, download.user_id);
+	}
+
+	@Test
+	public void joinWithSpecificType() throws Exception {
+		List<CaffeineObject> downloads = downloadLookup.join("inner", "downloads.user_id", "users.id").where("users.id = ?", 3).execute();
+		assertEquals("size of return list should match expected", downloads.size(), 1);
+		Download download = (Download) downloads.get(0);
+		assertEquals("id should match expected", 2, download.id);
+		assertEquals("file name should match expected", "FileTest num 2", download.file_file_name);
+		assertEquals("user_id should match expected", 3, download.user_id);
+	}
+
+	@Test
+	public void where() throws Exception {
+		List<CaffeineObject> users = userLookup.where("id in (2, 3)").execute();
+		assertEquals("size of return list should match expected", 2, users.size());
+		User user1 = (User) users.get(0);
+		User user2 = (User) users.get(1);
+		assertEquals("id should match expected", 2, user1.id);
+		assertEquals("first name should match expected", "Nick", user1.first_name);
+		assertEquals("last name should match expected", "Case", user1.last_name);
+		assertEquals("id should match expected", 3, user2.id);
+		assertEquals("first name should match expected", "Test", user2.first_name);
+		assertEquals("last name should match expected", "User", user2.last_name);
+	}
+
+	@Test
+	public void whereWithVariables() throws Exception {
+		List<CaffeineObject> users = userLookup.where("id = ?", 2).execute();
+		assertEquals("size of return list should match expected", 1, users.size());
+		User user1 = (User) users.get(0);
+		assertEquals("id should match expected", 2, user1.id);
+		assertEquals("first name should match expected", "Nick", user1.first_name);
+		assertEquals("last name should match expected", "Case", user1.last_name);
+	}
+
+	@Test
+	public void whereWithListArgs() throws Exception {
+		List<Object> args = new ArrayList<Object>();
+		args.add(2);
+		args.add(3);
+		List<CaffeineObject> users = userLookup.where("id in (?, ?)", args).execute();
+		assertEquals("size of return list should match expected", 2, users.size());
+		User user1 = (User) users.get(0);
+		User user2 = (User) users.get(1);
+		assertEquals("id should match expected", 2, user1.id);
+		assertEquals("first name should match expected", "Nick", user1.first_name);
+		assertEquals("last name should match expected", "Case", user1.last_name);
+		assertEquals("id should match expected", 3, user2.id);
+		assertEquals("first name should match expected", "Test", user2.first_name);
+		assertEquals("last name should match expected", "User", user2.last_name);
+	}
+
+	@Test
+	public void or() throws Exception {
+		List<CaffeineObject> users = userLookup.where("id in (2, 3)").or("first_name = 'Grawr'").execute();
+		assertEquals("size of return list should match expected", 3, users.size());
+		User user1 = (User) users.get(0);
+		User user2 = (User) users.get(1);
+		User user3 = (User) users.get(2);
+		assertEquals("id should matched expected", 1, user1.id);
+		assertEquals("first name should match expected", "Grawr", user1.first_name);
+		assertEquals("last name should match expected", "McPhee", user1.last_name);
+		assertEquals("id should match expected", 2, user2.id);
+		assertEquals("first name should match expected", "Nick", user2.first_name);
+		assertEquals("last name should match expected", "Case", user2.last_name);
+		assertEquals("id should match expected", 3, user3.id);
+		assertEquals("first name should match expected", "Test", user3.first_name);
+		assertEquals("last name should match expected", "User", user3.last_name);
+	}
+
+	@Test
+	public void orWithVariables() throws Exception {
+		List<CaffeineObject> users = userLookup.where("id = ?", 2).or("id = ?", 3).execute();
+		assertEquals("size of return list should match expected", 2, users.size());
+		User user1 = (User) users.get(0);
+		User user2 = (User) users.get(1);
+		assertEquals("id should match expected", 2, user1.id);
+		assertEquals("first name should match expected", "Nick", user1.first_name);
+		assertEquals("last name should match expected", "Case", user1.last_name);
+		assertEquals("id should match expected", 3, user2.id);
+		assertEquals("first name should match expected", "Test", user2.first_name);
+		assertEquals("last name should match expected", "User", user2.last_name);
+	}
+
+	@Test
+	public void orWithListArgs() throws Exception {
+		List<Object> args = new ArrayList<Object>();
+		args.add(2);
+		args.add(3);
+		List<CaffeineObject> users = userLookup.where("id = 2").or("id in (?, ?)", args).execute();
+		assertEquals("size of return list should match expected", 2, users.size());
+		User user1 = (User) users.get(0);
+		User user2 = (User) users.get(1);
+		assertEquals("id should match expected", 2, user1.id);
+		assertEquals("first name should match expected", "Nick", user1.first_name);
+		assertEquals("last name should match expected", "Case", user1.last_name);
+		assertEquals("id should match expected", 3, user2.id);
+		assertEquals("first name should match expected", "Test", user2.first_name);
+		assertEquals("last name should match expected", "User", user2.last_name);
+	}
+
+	@Test
+	public void getAssociatedHasMany() throws Exception {
+		User user = (User) userLookup.find(2);
+		List<CaffeineObject> downloads = user.getAssociated(downloadLookup);
+		assertEquals("size of return should match expected", 2, downloads.size());
+		Download download1 = (Download) downloads.get(0);
+		Download download2 = (Download) downloads.get(1);
+		assertArrayEquals("ids of associated downloads should match expected", new int[] {1, 4}, new int[] {download1.id, download2.id});
+	}
+
+	@Test
+	public void getAssociatedHasManyWithForeignKey() throws Exception {
+		User user = (User) userLookup.find(2);
+		List<CaffeineObject> downloads = user.getAssociated(downloadLookup, "org_id");
+		assertEquals("size of return should match expected", 2, downloads.size());
+		Download download1 = (Download) downloads.get(0);
+		Download download2 = (Download) downloads.get(1);
+		assertArrayEquals("ids of associated downloads should match expected", new int[] {1, 3}, new int[] {download1.id, download2.id});
+	}
+
+	@Test
+	public void getAssociatedBelongsTo() throws Exception {
+		Download download = (Download) downloadLookup.find(3);
+		List<CaffeineObject> users = download.getAssociated(userLookup);
+		assertEquals("return list should only contain the possessing object", 1, users.size());
+		User user = (User) users.get(0);
+		assertEquals("id should match expected possessing user", 1, user.id);
+	}
+
+	@Test
+	public void getAssociatedBelongsToWithForeignKey() throws Exception {
+		Download download = (Download) downloadLookup.find(3);
+		List<CaffeineObject> users = download.getAssociated(userLookup, "org_id");
+		assertEquals("return list should only contain the possessing object", 1, users.size());
+		User user = (User) users.get(0);
+		assertEquals("id should match expected possessing user", 2, user.id);
+	}
+
+	@Test
+	public void create() throws Exception {
+		Map<String, Object> args = new HashMap<String, Object>();
+		args.put("id", 4);
+		args.put("first_name", "Superman");
+		args.put("last_name", "is not as cool as a flawed hero");
+		User newUser = (User) userLookup.create(args);
+		assertEquals("id should match what was put in the args", 4, newUser.id);
+		assertEquals("first name should match what was put in the args", "Superman", newUser.first_name);
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", newUser.last_name);
+		User dbUser = (User) userLookup.find(4);
+		assertEquals("id should match what was put in the args", 4, dbUser.id);
+		assertEquals("first name should match what was put in the args", "Superman", dbUser.first_name);
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.last_name);
+	}
+
+	@Test
+	public void update() throws Exception {
+		Map<String, Object> args = new HashMap<String, Object>();
+		args.put("first_name", "Superman");
+		args.put("last_name", "is not as cool as a flawed hero");
+		User user = (User) userLookup.find(2);
+		user.update(args);
+		assertEquals("id should not have been updated", 2, user.id);
+		assertEquals("first name should match what was put in the args", "Superman", user.first_name);
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", user.last_name);
+		User dbUser = (User) userLookup.find(2);
+		assertEquals("id should not have been updated", 2, dbUser.id);
+		assertEquals("first name should match what was put in the args", "Superman", dbUser.first_name);
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.last_name);
+	}
+
+	@Test
+	public void updateNonExistentUser() throws Exception {
+		Map<String, Object> args = new HashMap<String, Object>();
+		args.put("first_name", "Superman");
+		args.put("last_name", "is not as cool as a flawed hero");
+		User user = (User) userLookup.find(7);
+		user.update(args);
+		assertArrayEquals("no user should have been updated or created", new Object[] {0, null, null}, new Object[] {user.id, user.first_name, user.last_name});
+		User dbUser = (User) userLookup.find(7);
+		assertArrayEquals("no user should have been updated or created", new Object[] {0, null, null}, new Object[] {dbUser.id, dbUser.first_name, dbUser.last_name});
+		List<CaffeineObject> users = userLookup.executeQuery("select * from users");
+		assertEquals("size of return should match expected", 3, users.size());
+		User user1 = (User) users.get(0);
+		User user2 = (User) users.get(1);
+		User user3 = (User) users.get(2);
+		assertArrayEquals("deleted object should not be in return", new int[] {1, 2, 3}, new int[] {user1.id, user2.id, user3.id});
+		assertArrayEquals("deleted object attrs should not be in return objects", new String[] {"Grawr", "Nick", "Test"}, new String[] {user1.first_name, user2.first_name, user3.first_name});
+	}
+
+	@Test
+	public void delete() throws Exception {
+		User user = (User) userLookup.find(3);
+		boolean result = user.delete();
+		assertEquals("return should be whether or not object was deleted", true, result);
+		List<CaffeineObject> users = userLookup.executeQuery("select * from users");
+		assertEquals("size of return should match expected", 2, users.size());
+		User user1 = (User) users.get(0);
+		User user2 = (User) users.get(1);
+		assertArrayEquals("deleted object should not be in return", new int[] {1, 2}, new int[] {user1.id, user2.id});
+		assertArrayEquals("deleted object attrs should not be in return objects", new String[] {"Grawr", "Nick"}, new String[] {user1.first_name, user2.first_name});
+	}
+
+	@Test
+	public void deleteNonExistentUser() throws Exception {
+		User user = (User) userLookup.find(8);
+		boolean result = user.delete();
+		assertEquals("return true if sql ran without error", true, result);
+		List<CaffeineObject> users = userLookup.executeQuery("select * from users");
+		assertEquals("size of return should match expected", 3, users.size());
+		User user1 = (User) users.get(0);
+		User user2 = (User) users.get(1);
+		User user3 = (User) users.get(2);
+		assertArrayEquals("no objects should have been deleted", new int[] {1, 2, 3}, new int[] {user1.id, user2.id, user3.id});
+		assertArrayEquals("no object attrs should have been deleted", new String[] {"Grawr", "Nick", "Test"}, new String[] {user1.first_name, user2.first_name, user3.first_name});
 	}
 
 	// Test helper methods

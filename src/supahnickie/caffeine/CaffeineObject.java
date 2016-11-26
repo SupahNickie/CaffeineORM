@@ -124,11 +124,22 @@ public abstract class CaffeineObject {
 
 	/* AR-like querying methods */
 
+	@SuppressWarnings("unchecked")
 	public final List<CaffeineObject> execute() throws Exception {
 		String sql = getCurrentQuery();
 		PreparedStatement ps = setup().prepareStatement(sql);
-		for (int i = 1; i <= getPlaceholders().size(); i++) {
-			ps.setObject(i, getPlaceholders().get(i - 1));
+		int counter = 1;
+		for (int i = 0; i < getPlaceholders().size(); i++) {
+			if (getPlaceholders().get(i).getClass().equals(ArrayList.class)) {
+				List<Object> arrayArgs = (List<Object>) getPlaceholders().get(i);
+				for (int j = 0; j < arrayArgs.size(); j++) {
+					ps.setObject(counter, arrayArgs.get(j));
+					counter++;
+				}
+			} else {
+				ps.setObject(counter, getPlaceholders().get(i));
+				counter++;
+			}
 		}
 		List<CaffeineObject> results = executeQuery(ps);
 		resetQueryState();
@@ -180,12 +191,22 @@ public abstract class CaffeineObject {
 		return where(condition);
 	}
 
+	public final CaffeineObject where(String condition, List<Object> placeholderValues) throws Exception {
+		getPlaceholders().add(placeholderValues);
+		return where(condition);
+	}
+
 	public final CaffeineObject or(String condition) throws Exception {
 		return appendCondition("or", condition);
 	}
 
 	public final CaffeineObject or(String condition, Object placeholderValue) throws Exception {
 		getPlaceholders().add(placeholderValue);
+		return or(condition);
+	}
+
+	public final CaffeineObject or(String condition, List<Object> placeholderValues) throws Exception {
+		getPlaceholders().add(placeholderValues);
 		return or(condition);
 	}
 
