@@ -15,18 +15,6 @@ public class CaffeineTest {
 	CaffeineObject userLookup;
 	CaffeineObject downloadLookup;
 
-	@Before
-	public void setUp() throws Exception {
-		// The database must already exist, but should be blank otherwise.
-		new Caffeine(System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL"), System.getenv("CAFFEINE_DB_USERNAME"), System.getenv("CAFFEINE_DB_PASSWORD"));
-		databaseHandle = new User();
-		userLookup = new User();
-		downloadLookup = new Download();
-		insertTables();
-		insertUsers();
-		insertDownloads();
-	}
-
 	// Raw SQL tests
 
 	@Test
@@ -149,13 +137,25 @@ public class CaffeineTest {
 		assertNotEquals("last name should not match others", user.last_name, "McPhee");
 	}
 
+	// Test helper methods
+
+	@Before
+	public void setUp() throws Exception {
+		// The database must already exist, but should be blank otherwise.
+		new Caffeine(System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL"), System.getenv("CAFFEINE_DB_USERNAME"), System.getenv("CAFFEINE_DB_PASSWORD"));
+		databaseHandle = new User();
+		userLookup = new User();
+		downloadLookup = new Download();
+		insertTables();
+		insertUsers();
+		insertDownloads();
+	}
+
 	@After
 	public void tearDown() throws Exception {
 		databaseHandle.executeUpdate("drop table if exists users");
 		databaseHandle.executeUpdate("drop table if exists downloads");
 	}
-
-	// Test helper methods
 
 	public void insertTables() throws Exception {
 		databaseHandle.executeUpdate("drop table if exists users");
