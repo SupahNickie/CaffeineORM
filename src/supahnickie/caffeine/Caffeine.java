@@ -3,7 +3,7 @@ package supahnickie.caffeine;
 import java.sql.*;
 
 public final class Caffeine {
-	public static Caffeine caffeine;
+	static Caffeine caffeine;
 	DBConnection connector;
 	Connection connection;
 
@@ -12,16 +12,16 @@ public final class Caffeine {
 		connector = new DBConnection(driver, url, username, password);
 	}
 
-	public final Connection setup() {
+	final Connection setup() {
 		if (connection == null) { setConnection(); }
 		return this.connection;
 	}
 
-	public final void setConnection() {
+	final void setConnection() {
 		connection = connector.openConnection();
 	}
 
-	public final void teardown() {
+	final void teardown() {
 		connection = null;
 		connector.closeConnection();
 	}
@@ -40,7 +40,7 @@ public final class Caffeine {
 			this.password = password;
 		}
 
-		public final Connection openConnection() {
+		final Connection openConnection() {
 			c = null;
 			try {
 				Class.forName(this.driver);
@@ -53,7 +53,7 @@ public final class Caffeine {
 			}
 		}
 
-		public final void closeConnection() {
+		final void closeConnection() {
 			try {
 				c.close();
 			} catch (SQLException e) {

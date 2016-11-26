@@ -7,10 +7,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class CaffeineObject {
-	public String currentQuery;
-	public boolean firstCondition;
+	String currentQuery;
+	boolean firstCondition;
+	List<Object> placeholders = new ArrayList<Object>();
 	public String validationErrors = "";
-	public List<Object> placeholders = new ArrayList<Object>();
 
 	/* Raw SQL execute, used for INSERT, UPDATE, DELETE */
 

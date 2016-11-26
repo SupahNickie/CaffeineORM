@@ -3,22 +3,22 @@ package supahnickie.caffeine;
 import java.sql.*;
 import java.util.*;
 
-public final class Row {
-	public HashMap<String, Object> row;
+final class Row {
+	HashMap<String, Object> row;
 
-	public Row() {
+	Row() {
 		this.row = new HashMap<String, Object>();
 	}
 
-	public final HashMap<String, Object> getRow() {
+	final HashMap<String, Object> getRow() {
 		return this.row;
 	}
 
-	public final void add (String column, Object value) {
+	final void add (String column, Object value) {
 		getRow().put(column, value);
 	}
 
-	public final static void formTable (ResultSet rs, List<HashMap<String, Object>> table) throws SQLException {
+	final static void formTable (ResultSet rs, List<HashMap<String, Object>> table) throws SQLException {
 		if (rs == null) return;
 
 		ResultSetMetaData rsmd = rs.getMetaData();
