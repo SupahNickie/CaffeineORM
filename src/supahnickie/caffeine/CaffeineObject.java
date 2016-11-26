@@ -86,8 +86,12 @@ public abstract class CaffeineObject {
 		return executeQuery(setup().prepareStatement(sql));
 	}
 
+	public final List<CaffeineObject> executeQuery(String sql, List<Object> values) throws Exception {
+		return executeQuery(sql, values, null);
+	}
+
 	public final List<CaffeineObject> executeQuery(String sql, List<Object> values, Map<String, Object> options) throws Exception {
-		sql = appendOptions(sql, options);
+		if (!(options == null)) { sql = appendOptions(sql, options); }
 		PreparedStatement ps = setup().prepareStatement(sql);
 		int counter = 1;
 		for (Object value : values) {
