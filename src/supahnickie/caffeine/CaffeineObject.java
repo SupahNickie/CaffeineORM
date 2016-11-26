@@ -101,6 +101,10 @@ public abstract class CaffeineObject {
 		return executeQuery(ps);
 	}
 
+	public final List<CaffeineObject> executeQuery(Map<String, Object> args) throws Exception {
+		return executeQuery(args, null);
+	}
+
 	public final List<CaffeineObject> executeQuery(Map<String, Object> args, Map<String, Object> options) throws Exception {
 		String sql = baseQuery() + " where ";
 		List<String> keys = new ArrayList<>(args.keySet());
@@ -108,7 +112,7 @@ public abstract class CaffeineObject {
 			sql = sql + keys.get(i) + " = ?";
 			if ( (args.keySet().size() > 1) && (i != args.keySet().size() - 1) ) { sql = sql + " and "; }
 		}
-		sql = appendOptions(sql, options);
+		if (!(options == null)) { sql = appendOptions(sql, options); }
 		PreparedStatement ps = setup().prepareStatement(sql);
 		int counter = 1;
 		for (String column : keys) {

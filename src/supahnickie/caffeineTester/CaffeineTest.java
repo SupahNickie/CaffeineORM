@@ -97,6 +97,45 @@ public class CaffeineTest {
 		assertEquals("download1 org_id should match seed", download1.org_id, 2);
 	}
 
+	@Test
+	public void executeARlikeQuery() throws Exception {
+		Map<String, Object> args = new HashMap<String, Object>();
+		args.put("file_file_name", "FileTest num 4");
+		args.put("org_id", 3);
+		List<CaffeineObject> downloads = downloadLookup.executeQuery(args);
+		assertEquals("size of return array should match expected return", downloads.size(), 1);
+		Download download1 = (Download) downloads.get(0);
+		assertEquals("download1 file name should match seed", download1.file_file_name, "FileTest num 4");
+		assertEquals("download1 org_id should match seed", download1.org_id, 3);
+	}
+
+	@Test
+	public void executeARlikeQueryWithOptions() throws Exception {
+		Map<String, Object> args = new HashMap<String, Object>();
+		args.put("file_file_name", "FileTest num 3");
+		args.put("org_id", 2);
+		Map<String, Object> options = new HashMap<String, Object>();
+		options.put("limit", 1);
+		options.put("orderBy", "id asc");
+		List<CaffeineObject> downloads = downloadLookup.executeQuery(args, options);
+		assertEquals("size of return array should match expected return", downloads.size(), 1);
+		Download download1 = (Download) downloads.get(0);
+		assertEquals("download1 file name should match seed", download1.file_file_name, "FileTest num 3");
+		assertEquals("download1 org_id should match seed", download1.org_id, 2);
+	}
+
+	@Test
+	public void queryWhereNoConditionsMatch() throws Exception {
+		Map<String, Object> args = new HashMap<String, Object>();
+		args.put("file_file_name", "FileTest num 6");
+		args.put("org_id", 2);
+		Map<String, Object> options = new HashMap<String, Object>();
+		options.put("limit", 1);
+		options.put("orderBy", "id asc");
+		List<CaffeineObject> downloads = downloadLookup.executeQuery(args, options);
+		assertEquals("size of return array should match expected return", downloads.size(), 0);
+	}
+
 	// AR-like methods tests
 
 	@Test
