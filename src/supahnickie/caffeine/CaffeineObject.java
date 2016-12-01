@@ -443,11 +443,11 @@ public abstract class CaffeineObject {
 	/* Connection handling */
 
 	private final static Connection setup() {
-		return Caffeine.caffeine.setup();
+		return Caffeine.setup();
 	}
 
 	private final static void teardown() {
-		Caffeine.caffeine.teardown();
+		Caffeine.teardown();
 	}
 
 	private final static void teardown(ResultSet rs, PreparedStatement ps) throws Exception {

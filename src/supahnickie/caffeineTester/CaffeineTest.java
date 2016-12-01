@@ -376,7 +376,7 @@ public class CaffeineTest {
 	@Before
 	public void setUp() throws Exception {
 		// The database must already exist, but should be blank otherwise.
-		new Caffeine(System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL"), System.getenv("CAFFEINE_DB_USERNAME"), System.getenv("CAFFEINE_DB_PASSWORD"));
+		Caffeine.setConfiguration(System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL"), System.getenv("CAFFEINE_DB_USERNAME"), System.getenv("CAFFEINE_DB_PASSWORD"));
 		databaseHandle = new User();
 		userLookup = new User();
 		downloadLookup = new Download();

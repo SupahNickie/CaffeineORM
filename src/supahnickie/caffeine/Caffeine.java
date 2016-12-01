@@ -3,62 +3,40 @@ package supahnickie.caffeine;
 import java.sql.*;
 
 public final class Caffeine {
-	static Caffeine caffeine;
-	DBConnection connector;
-	Connection connection;
+	private static String dbDriver;
+	private static String dbUrl;
+	private static String dbUsername;
+	private static String dbPassword;
+	private static Connection connection;
 
-	public Caffeine(String driver, String url, String username, String password) {
-		caffeine = this;
-		connector = new DBConnection(driver, url, username, password);
+	private Caffeine() {}
+	
+	public static void setConfiguration(String driver, String url, String username, String password) {
+		dbDriver = driver;
+		dbUrl = url;
+		dbUsername = username;
+		dbPassword = password;
 	}
 
-	final Connection setup() {
-		if (connection == null) { setConnection(); }
-		return this.connection;
-	}
-
-	final void setConnection() {
-		connection = connector.openConnection();
-	}
-
-	final void teardown() {
+	final static Connection setup() {
 		connection = null;
-		connector.closeConnection();
+		try {
+			Class.forName(dbDriver);
+			connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
+			connection.setAutoCommit(false);
+			return connection;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
-	private final class DBConnection {
-		private String driver;
-		private String url;
-		private String username;
-		private String password;
-		private Connection c;
-
-		DBConnection(String driver, String url, String username, String password) {
-			this.driver = driver;
-			this.url = url;
-			this.username = username;
-			this.password = password;
-		}
-
-		final Connection openConnection() {
-			c = null;
-			try {
-				Class.forName(this.driver);
-				c = DriverManager.getConnection(this.url, this.username, this.password);
-				c.setAutoCommit(false);
-				return c;
-			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
-			}
-		}
-
-		final void closeConnection() {
-			try {
-				c.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+	final static void teardown() {
+		try {
+			connection.close();
+			connection = null;
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 	}
 }
