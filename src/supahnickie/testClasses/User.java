@@ -20,12 +20,12 @@ public class User extends CaffeineObject {
 
 	/* Normal model attributes; names must map to database columns
 	 * (if your db columns are lowerCamelCase, use that style) */
-	public int id;
-	public String first_name;
-	public String last_name;
-	public String encrypted_password;
-	public int sign_in_count;
-	public String role;
+	private int id;
+	private String first_name;
+	private String last_name;
+	private String encrypted_password;
+	private int sign_in_count;
+	private String role;
 
 	public User() {}
 
@@ -47,6 +47,24 @@ public class User extends CaffeineObject {
 	public boolean updateValidations() {
 		return true;
 	}
+
+	/* Normal Getters */
+
+	public int getId() { return this.id; }
+	public String getFirstName() { return this.first_name; }
+	public String getLastName() { return this.last_name; }
+	public String getEncryptedPassword() { return this.encrypted_password; }
+	public int getSignInCount() { return this.sign_in_count; }
+	public String getRole() { return this.role; }
+
+	/* Normal Setters */
+
+	public void setId(int id) { this.id = id; }
+	public void setFirstName(String firstName) { this.first_name = firstName; }
+	public void setLastName(String lastName) { this.last_name = lastName; }
+	public void setEncryptedPassword(String encryptedPassword) { this.encrypted_password = encryptedPassword; }
+	public void setSignInCount(int signInCount) { this.sign_in_count = signInCount; }
+	public void setRole(String role) { this.role = role; }
 
 	/* Model methods */
 

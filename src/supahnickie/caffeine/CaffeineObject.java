@@ -2,6 +2,7 @@ package supahnickie.caffeine;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.sql.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -84,11 +85,12 @@ public class CaffeineObject {
 			if (validate("create")) {
 				Caffeine.setQueryClass(this.getClass());
 				Map<String, Object> args = new HashMap<String, Object>();
-				Field[] fields = Caffeine.getQueryClass().getFields();
+				Field[] fields = Caffeine.getQueryClass().getDeclaredFields();
 				for (Field f : fields) {
 					String[] nameSplit = f.toString().split("\\.");
 					String simpleName = nameSplit[nameSplit.length - 1];
 					if ( !(ignoredFields.contains(simpleName)) ) {
+						if (Modifier.isPrivate(f.getModifiers())) { f.setAccessible(true); }
 						args.put(simpleName, f.get(this));
 					}
 				}
@@ -128,6 +130,7 @@ public class CaffeineObject {
 			Field tableNameField = Caffeine.getQueryClass().getDeclaredField("tableName");
 			Field field = Caffeine.getQueryClass().getDeclaredField("id");
 			String tableName = (String) tableNameField.get(null);
+			field.setAccessible(true);
 			int id = field.getInt(this);
 			String sql = "delete from " + tableName + " where id = " + id;
 			Caffeine.executeUpdate(sql);
@@ -240,6 +243,7 @@ public class CaffeineObject {
 		Field field = Caffeine.getQueryClass().getDeclaredField("id");
 		String tableName = (String) tableNameField.get(null);
 		String associatedTableName = (String) associatedTableNameField.get(null);
+		field.setAccessible(true);
 		int id = field.getInt(this);
 		String foreignLookup = (foreignKey == null) ? tableName.substring(0, tableName.length() - 1) + "_id" : foreignKey;
 		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where " + foreignLookup + " = " + id;
@@ -252,6 +256,7 @@ public class CaffeineObject {
 		Field associatedTableNameField = associated.getDeclaredField("tableName");
 		String associatedTableName = (String) associatedTableNameField.get(null);
 		Field field = (foreignKey == null) ? Caffeine.getQueryClass().getDeclaredField(associatedTableName.substring(0, associatedTableName.length() -1) + "_id") : Caffeine.getQueryClass().getDeclaredField(foreignKey);
+		field.setAccessible(true);
 		int id = field.getInt(this);
 		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where id = " + id;
 		Caffeine.setQueryClass(associated);
@@ -281,6 +286,7 @@ public class CaffeineObject {
 		Field tableNameField = Caffeine.getQueryClass().getDeclaredField("tableName");
 		Field field = Caffeine.getQueryClass().getDeclaredField("id");
 		String tableName = (String) tableNameField.get(null);
+		field.setAccessible(true);
 		int id = field.getInt(this);
 		String sql = "update " + tableName + " set ";
 		for (int i = 0; i < argKeys.length; i++) {
@@ -375,6 +381,7 @@ public class CaffeineObject {
 		for (Field f : fields) {
 			try {
 				String[] attrIdentifier = f.toString().split("\\.");
+				f.setAccessible(true);
 				f.set(this, rs.getObject(attrIdentifier[attrIdentifier.length - 1]));
 			} catch (Exception e){
 				// Do nothing
@@ -395,6 +402,7 @@ public class CaffeineObject {
 	final void setAttr(String column, Object value) throws Exception {
 		try {
 			Field field = Caffeine.getQueryClass().getDeclaredField(column);
+			field.setAccessible(true);
 			field.set(this, value);
 		} catch (Exception e) {
 			// Do nothing

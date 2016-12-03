@@ -131,20 +131,20 @@ public class CaffeineTest {
 	@Test
 	public void find() throws Exception {
 		User user = (User) CaffeineObject.find(User.class, 2);
-		assertEquals("ids should match", 2, user.id);
-		assertEquals("first name should match", "Nick", user.first_name);
-		assertEquals("last name should match", "Case", user.last_name);
-		assertNotEquals("ids should not match others", 1, user.id);
-		assertNotEquals("first name should not match others", "Grawr", user.first_name);
-		assertNotEquals("last name should not match others", "McPhee", user.last_name);
+		assertEquals("ids should match", 2, user.getId());
+		assertEquals("first name should match", "Nick", user.getFirstName());
+		assertEquals("last name should match", "Case", user.getLastName());
+		assertNotEquals("ids should not match others", 1, user.getId());
+		assertNotEquals("first name should not match others", "Grawr", user.getFirstName());
+		assertNotEquals("last name should not match others", "McPhee", user.getLastName());
 	}
 
 	@Test
 	public void findWithNonexistentUser() throws Exception {
 		User user = (User) CaffeineObject.find(User.class, 8);
-		assertEquals("returned object id should be 0", 0, user.id);
-		assertEquals("returned object first_name should be null", null, user.first_name);
-		assertEquals("returned object last_name should be null", null, user.last_name);
+		assertEquals("returned object id should be 0", 0, user.getId());
+		assertEquals("returned object first_name should be null", null, user.getFirstName());
+		assertEquals("returned object last_name should be null", null, user.getLastName());
 	}
 
 	@Test
@@ -154,29 +154,29 @@ public class CaffeineTest {
 		args.put("first_name", "Superman");
 		args.put("last_name", "is not as cool as a flawed hero");
 		User newUser = (User) CaffeineObject.create(User.class, args);
-		assertEquals("id should match what was put in the args", 4, newUser.id);
-		assertEquals("first name should match what was put in the args", "Superman", newUser.first_name);
-		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", newUser.last_name);
+		assertEquals("id should match what was put in the args", 4, newUser.getId());
+		assertEquals("first name should match what was put in the args", "Superman", newUser.getFirstName());
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", newUser.getLastName());
 		User dbUser = (User) CaffeineObject.find(User.class, 4);
-		assertEquals("id should match what was put in the args", 4, dbUser.id);
-		assertEquals("first name should match what was put in the args", "Superman", dbUser.first_name);
-		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.last_name);
+		assertEquals("id should match what was put in the args", 4, dbUser.getId());
+		assertEquals("first name should match what was put in the args", "Superman", dbUser.getFirstName());
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.getLastName());
 	}
 
 	@Test
 	public void createFromInstance() throws Exception {
 		User newUser = new User();
-		newUser.id = 4;
-		newUser.first_name = "Superman";
-		newUser.last_name = "is not as cool as a flawed hero";
+		newUser.setId(4);
+		newUser.setFirstName("Superman");
+		newUser.setLastName("is not as cool as a flawed hero");
 		newUser.create();
-		assertEquals("id should match what was put in the args", 4, newUser.id);
-		assertEquals("first name should match what was put in the args", "Superman", newUser.first_name);
-		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", newUser.last_name);
+		assertEquals("id should match what was put in the args", 4, newUser.getId());
+		assertEquals("first name should match what was put in the args", "Superman", newUser.getFirstName());
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", newUser.getLastName());
 		User dbUser = (User) CaffeineObject.find(User.class, 4);
-		assertEquals("id should match what was put in the args", 4, dbUser.id);
-		assertEquals("first name should match what was put in the args", "Superman", dbUser.first_name);
-		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.last_name);
+		assertEquals("id should match what was put in the args", 4, dbUser.getId());
+		assertEquals("first name should match what was put in the args", "Superman", dbUser.getFirstName());
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.getLastName());
 	}
 
 	@Test
@@ -186,13 +186,13 @@ public class CaffeineTest {
 		args.put("last_name", "is not as cool as a flawed hero");
 		User user = (User) CaffeineObject.find(User.class, 2);
 		user.update(args);
-		assertEquals("id should not have been updated", 2, user.id);
-		assertEquals("first name should match what was put in the args", "Superman", user.first_name);
-		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", user.last_name);
+		assertEquals("id should not have been updated", 2, user.getId());
+		assertEquals("first name should match what was put in the args", "Superman", user.getFirstName());
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", user.getLastName());
 		User dbUser = (User) CaffeineObject.find(User.class, 2);
-		assertEquals("id should not have been updated", 2, dbUser.id);
-		assertEquals("first name should match what was put in the args", "Superman", dbUser.first_name);
-		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.last_name);
+		assertEquals("id should not have been updated", 2, dbUser.getId());
+		assertEquals("first name should match what was put in the args", "Superman", dbUser.getFirstName());
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.getLastName());
 	}
 
 	@Test
@@ -202,17 +202,17 @@ public class CaffeineTest {
 		args.put("last_name", "is not as cool as a flawed hero");
 		User user = (User) CaffeineObject.find(User.class, 7);
 		user.update(args);
-		assertArrayEquals("no user should have been updated or created", new Object[] {0, null, null}, new Object[] {user.id, user.first_name, user.last_name});
+		assertArrayEquals("no user should have been updated or created", new Object[] {0, null, null}, new Object[] {user.getId(), user.getFirstName(), user.getLastName()});
 		User dbUser = (User) CaffeineObject.find(User.class, 7);
-		assertArrayEquals("no user should have been updated or created", new Object[] {0, null, null}, new Object[] {dbUser.id, dbUser.first_name, dbUser.last_name});
+		assertArrayEquals("no user should have been updated or created", new Object[] {0, null, null}, new Object[] {dbUser.getId(), dbUser.getFirstName(), dbUser.getLastName()});
 		CaffeineObject.setQueryClass(User.class);
 		List<CaffeineObject> users = Caffeine.executeQuery("select * from users");
 		assertEquals("size of return should match expected", 3, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
 		User user3 = (User) users.get(2);
-		assertArrayEquals("deleted object should not be in return", new int[] {1, 2, 3}, new int[] {user1.id, user2.id, user3.id});
-		assertArrayEquals("deleted object attrs should not be in return objects", new String[] {"Grawr", "Nick", "Test"}, new String[] {user1.first_name, user2.first_name, user3.first_name});
+		assertArrayEquals("deleted object should not be in return", new int[] {1, 2, 3}, new int[] {user1.getId(), user2.getId(), user3.getId()});
+		assertArrayEquals("deleted object attrs should not be in return objects", new String[] {"Grawr", "Nick", "Test"}, new String[] {user1.getFirstName(), user2.getFirstName(), user3.getFirstName()});
 	}
 
 	@Test
@@ -225,8 +225,8 @@ public class CaffeineTest {
 		assertEquals("size of return should match expected", 2, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
-		assertArrayEquals("deleted object should not be in return", new int[] {1, 2}, new int[] {user1.id, user2.id});
-		assertArrayEquals("deleted object attrs should not be in return objects", new String[] {"Grawr", "Nick"}, new String[] {user1.first_name, user2.first_name});
+		assertArrayEquals("deleted object should not be in return", new int[] {1, 2}, new int[] {user1.getId(), user2.getId()});
+		assertArrayEquals("deleted object attrs should not be in return objects", new String[] {"Grawr", "Nick"}, new String[] {user1.getFirstName(), user2.getFirstName()});
 	}
 
 	@Test
@@ -240,8 +240,8 @@ public class CaffeineTest {
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
 		User user3 = (User) users.get(2);
-		assertArrayEquals("no objects should have been deleted", new int[] {1, 2, 3}, new int[] {user1.id, user2.id, user3.id});
-		assertArrayEquals("no object attrs should have been deleted", new String[] {"Grawr", "Nick", "Test"}, new String[] {user1.first_name, user2.first_name, user3.first_name});
+		assertArrayEquals("no objects should have been deleted", new int[] {1, 2, 3}, new int[] {user1.getId(), user2.getId(), user3.getId()});
+		assertArrayEquals("no object attrs should have been deleted", new String[] {"Grawr", "Nick", "Test"}, new String[] {user1.getFirstName(), user2.getFirstName(), user3.getFirstName()});
 	}
 
 	@Test
@@ -282,12 +282,12 @@ public class CaffeineTest {
 		assertEquals("size of return list should match expected", 2, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
-		assertEquals("id should match expected", 2, user1.id);
-		assertEquals("first name should match expected", "Nick", user1.first_name);
-		assertEquals("last name should match expected", "Case", user1.last_name);
-		assertEquals("id should match expected", 3, user2.id);
-		assertEquals("first name should match expected", "Test", user2.first_name);
-		assertEquals("last name should match expected", "User", user2.last_name);
+		assertEquals("id should match expected", 2, user1.getId());
+		assertEquals("first name should match expected", "Nick", user1.getFirstName());
+		assertEquals("last name should match expected", "Case", user1.getLastName());
+		assertEquals("id should match expected", 3, user2.getId());
+		assertEquals("first name should match expected", "Test", user2.getFirstName());
+		assertEquals("last name should match expected", "User", user2.getLastName());
 	}
 
 	@Test
@@ -295,9 +295,9 @@ public class CaffeineTest {
 		List<CaffeineObject> users = CaffeineObject.chainable(User.class).where("id = ?", 2).execute();
 		assertEquals("size of return list should match expected", 1, users.size());
 		User user1 = (User) users.get(0);
-		assertEquals("id should match expected", 2, user1.id);
-		assertEquals("first name should match expected", "Nick", user1.first_name);
-		assertEquals("last name should match expected", "Case", user1.last_name);
+		assertEquals("id should match expected", 2, user1.getId());
+		assertEquals("first name should match expected", "Nick", user1.getFirstName());
+		assertEquals("last name should match expected", "Case", user1.getLastName());
 	}
 
 	@Test
@@ -309,12 +309,12 @@ public class CaffeineTest {
 		assertEquals("size of return list should match expected", 2, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
-		assertEquals("id should match expected", 2, user1.id);
-		assertEquals("first name should match expected", "Nick", user1.first_name);
-		assertEquals("last name should match expected", "Case", user1.last_name);
-		assertEquals("id should match expected", 3, user2.id);
-		assertEquals("first name should match expected", "Test", user2.first_name);
-		assertEquals("last name should match expected", "User", user2.last_name);
+		assertEquals("id should match expected", 2, user1.getId());
+		assertEquals("first name should match expected", "Nick", user1.getFirstName());
+		assertEquals("last name should match expected", "Case", user1.getLastName());
+		assertEquals("id should match expected", 3, user2.getId());
+		assertEquals("first name should match expected", "Test", user2.getFirstName());
+		assertEquals("last name should match expected", "User", user2.getLastName());
 	}
 
 	@Test
@@ -324,15 +324,15 @@ public class CaffeineTest {
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
 		User user3 = (User) users.get(2);
-		assertEquals("id should matched expected", 1, user1.id);
-		assertEquals("first name should match expected", "Grawr", user1.first_name);
-		assertEquals("last name should match expected", "McPhee", user1.last_name);
-		assertEquals("id should match expected", 2, user2.id);
-		assertEquals("first name should match expected", "Nick", user2.first_name);
-		assertEquals("last name should match expected", "Case", user2.last_name);
-		assertEquals("id should match expected", 3, user3.id);
-		assertEquals("first name should match expected", "Test", user3.first_name);
-		assertEquals("last name should match expected", "User", user3.last_name);
+		assertEquals("id should matched expected", 1, user1.getId());
+		assertEquals("first name should match expected", "Grawr", user1.getFirstName());
+		assertEquals("last name should match expected", "McPhee", user1.getLastName());
+		assertEquals("id should match expected", 2, user2.getId());
+		assertEquals("first name should match expected", "Nick", user2.getFirstName());
+		assertEquals("last name should match expected", "Case", user2.getLastName());
+		assertEquals("id should match expected", 3, user3.getId());
+		assertEquals("first name should match expected", "Test", user3.getFirstName());
+		assertEquals("last name should match expected", "User", user3.getLastName());
 	}
 
 	@Test
@@ -341,12 +341,12 @@ public class CaffeineTest {
 		assertEquals("size of return list should match expected", 2, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
-		assertEquals("id should match expected", 2, user1.id);
-		assertEquals("first name should match expected", "Nick", user1.first_name);
-		assertEquals("last name should match expected", "Case", user1.last_name);
-		assertEquals("id should match expected", 3, user2.id);
-		assertEquals("first name should match expected", "Test", user2.first_name);
-		assertEquals("last name should match expected", "User", user2.last_name);
+		assertEquals("id should match expected", 2, user1.getId());
+		assertEquals("first name should match expected", "Nick", user1.getFirstName());
+		assertEquals("last name should match expected", "Case", user1.getLastName());
+		assertEquals("id should match expected", 3, user2.getId());
+		assertEquals("first name should match expected", "Test", user2.getFirstName());
+		assertEquals("last name should match expected", "User", user2.getLastName());
 	}
 
 	@Test
@@ -358,12 +358,12 @@ public class CaffeineTest {
 		assertEquals("size of return list should match expected", 2, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
-		assertEquals("id should match expected", 2, user1.id);
-		assertEquals("first name should match expected", "Nick", user1.first_name);
-		assertEquals("last name should match expected", "Case", user1.last_name);
-		assertEquals("id should match expected", 3, user2.id);
-		assertEquals("first name should match expected", "Test", user2.first_name);
-		assertEquals("last name should match expected", "User", user2.last_name);
+		assertEquals("id should match expected", 2, user1.getId());
+		assertEquals("first name should match expected", "Nick", user1.getFirstName());
+		assertEquals("last name should match expected", "Case", user1.getLastName());
+		assertEquals("id should match expected", 3, user2.getId());
+		assertEquals("first name should match expected", "Test", user2.getFirstName());
+		assertEquals("last name should match expected", "User", user2.getLastName());
 	}
 
 	@Test
@@ -392,7 +392,7 @@ public class CaffeineTest {
 		List<CaffeineObject> users = download.getAssociated(User.class);
 		assertEquals("return list should only contain the possessing object", 1, users.size());
 		User user = (User) users.get(0);
-		assertEquals("id should match expected possessing user", 1, user.id);
+		assertEquals("id should match expected possessing user", 1, user.getId());
 	}
 
 	@Test
@@ -401,7 +401,7 @@ public class CaffeineTest {
 		List<CaffeineObject> users = download.getAssociated(User.class, "org_id");
 		assertEquals("return list should only contain the possessing object", 1, users.size());
 		User user = (User) users.get(0);
-		assertEquals("id should match expected possessing user", 2, user.id);
+		assertEquals("id should match expected possessing user", 2, user.getId());
 	}
 
 	// Test helper methods
