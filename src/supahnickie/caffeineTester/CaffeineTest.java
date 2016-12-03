@@ -11,16 +11,12 @@ import supahnickie.caffeine.*;
 import supahnickie.testClasses.*;
 
 public class CaffeineTest {
-	CaffeineObject databaseHandle;
-	CaffeineObject userLookup;
-	CaffeineObject downloadLookup;
-
-	// Raw SQL tests
 
 	@Test
 	public void executeUpdate() throws Exception {
-		downloadLookup.executeUpdate("insert into downloads (id, org_id, file_file_name) values (15, 1, 'download1'), (16, 1, 'download2')");
-		List<CaffeineObject> downloads = downloadLookup.executeQuery("select * from downloads where id in (15, 16)");
+		Caffeine.executeUpdate("insert into downloads (id, org_id, file_file_name) values (15, 1, 'download1'), (16, 1, 'download2')");
+		CaffeineObject.setQueryClass(Download.class);
+		List<CaffeineObject> downloads = Caffeine.executeQuery("select * from downloads where id in (15, 16)");
 		Download download15 = (Download) downloads.get(0);
 		Download download16 = (Download) downloads.get(1);
 		assertArrayEquals("returned downloads should match expected ids", new int[] {15, 16}, new int[] {download15.id, download16.id});
@@ -30,22 +26,23 @@ public class CaffeineTest {
 
 	@Test
 	public void executeUpdateWithListArgs() throws Exception {
-		Download download = (Download) downloadLookup.find(1);
+		Download download = (Download) CaffeineObject.find(Download.class, 1);
 		assertEquals("file_file_name should match seed before transformation", "FileTest num 1", download.file_file_name);
 		assertEquals("org_id should match seed before transformation", 2, download.org_id);
 		List<Object> args = new ArrayList<Object>();
 		args.add("RenamedFile");
 		args.add(3);
 		args.add(1);
-		downloadLookup.executeUpdate("update downloads set (file_file_name, org_id) = (?, ?) where id = ?", args);
-		download = (Download) downloadLookup.find(1);
+		Caffeine.executeUpdate("update downloads set (file_file_name, org_id) = (?, ?) where id = ?", args);
+		download = (Download) CaffeineObject.find(Download.class, 1);
 		assertEquals("file_file_name should be changed to reflect the update", "RenamedFile", download.file_file_name);
 		assertEquals("org_id should should be changed to reflect the update", 3, download.org_id);
 	}
 
 	@Test
 	public void executeQuery() throws Exception {
-		List<CaffeineObject> downloads = downloadLookup.executeQuery("select * from downloads");
+		CaffeineObject.setQueryClass(Download.class);
+		List<CaffeineObject> downloads = Caffeine.executeQuery("select * from downloads");
 		assertEquals("size of return array should match seeds", 4, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -60,7 +57,8 @@ public class CaffeineTest {
 		List<Object> args = new ArrayList<Object>();
 		args.add("FileTest num 2");
 		args.add(2);
-		List<CaffeineObject> downloads = downloadLookup.executeQuery("select * from downloads where file_file_name = ? or org_id = ? order by id asc", args);
+		CaffeineObject.setQueryClass(Download.class);
+		List<CaffeineObject> downloads = Caffeine.executeQuery("select * from downloads where file_file_name = ? or org_id = ? order by id asc", args);
 		assertEquals("size of return array should match expected return", 3, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -78,7 +76,8 @@ public class CaffeineTest {
 		Map<String, Object> options = new HashMap<String, Object>();
 		options.put("limit", 1);
 		options.put("orderBy", "id asc");
-		List<CaffeineObject> downloads = downloadLookup.executeQuery("select * from downloads where file_file_name = ? or org_id = ?", args, options);
+		CaffeineObject.setQueryClass(Download.class);
+		List<CaffeineObject> downloads = Caffeine.executeQuery("select * from downloads where file_file_name = ? or org_id = ?", args, options);
 		assertEquals("size of return array should match expected return", 1, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		assertEquals("download1 file name should match seed", "FileTest num 3", download1.file_file_name);
@@ -90,7 +89,8 @@ public class CaffeineTest {
 		Map<String, Object> args = new HashMap<String, Object>();
 		args.put("file_file_name", "FileTest num 4");
 		args.put("org_id", 3);
-		List<CaffeineObject> downloads = downloadLookup.executeQuery(args);
+		CaffeineObject.setQueryClass(Download.class);
+		List<CaffeineObject> downloads = Caffeine.executeQuery(args);
 		assertEquals("size of return array should match expected return", 1, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		assertEquals("download1 file name should match seed", "FileTest num 4", download1.file_file_name);
@@ -105,7 +105,8 @@ public class CaffeineTest {
 		Map<String, Object> options = new HashMap<String, Object>();
 		options.put("limit", 1);
 		options.put("orderBy", "id asc");
-		List<CaffeineObject> downloads = downloadLookup.executeQuery(args, options);
+		CaffeineObject.setQueryClass(Download.class);
+		List<CaffeineObject> downloads = Caffeine.executeQuery(args, options);
 		assertEquals("size of return array should match expected return", 1, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		assertEquals("download1 file name should match seed", "FileTest num 3", download1.file_file_name);
@@ -120,7 +121,8 @@ public class CaffeineTest {
 		Map<String, Object> options = new HashMap<String, Object>();
 		options.put("limit", 1);
 		options.put("orderBy", "id asc");
-		List<CaffeineObject> downloads = downloadLookup.executeQuery(args, options);
+		CaffeineObject.setQueryClass(Download.class);
+		List<CaffeineObject> downloads = Caffeine.executeQuery(args, options);
 		assertEquals("size of return array should match expected return", 0, downloads.size());
 	}
 
@@ -128,7 +130,7 @@ public class CaffeineTest {
 
 	@Test
 	public void find() throws Exception {
-		User user = (User) userLookup.find(2);
+		User user = (User) CaffeineObject.find(User.class, 2);
 		assertEquals("ids should match", 2, user.id);
 		assertEquals("first name should match", "Nick", user.first_name);
 		assertEquals("last name should match", "Case", user.last_name);
@@ -139,15 +141,123 @@ public class CaffeineTest {
 
 	@Test
 	public void findWithNonexistentUser() throws Exception {
-		User user = (User) userLookup.find(8);
+		User user = (User) CaffeineObject.find(User.class, 8);
 		assertEquals("returned object id should be 0", 0, user.id);
 		assertEquals("returned object first_name should be null", null, user.first_name);
 		assertEquals("returned object last_name should be null", null, user.last_name);
 	}
 
 	@Test
+	public void create() throws Exception {
+		Map<String, Object> args = new HashMap<String, Object>();
+		args.put("id", 4);
+		args.put("first_name", "Superman");
+		args.put("last_name", "is not as cool as a flawed hero");
+		User newUser = (User) CaffeineObject.create(User.class, args);
+		assertEquals("id should match what was put in the args", 4, newUser.id);
+		assertEquals("first name should match what was put in the args", "Superman", newUser.first_name);
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", newUser.last_name);
+		User dbUser = (User) CaffeineObject.find(User.class, 4);
+		assertEquals("id should match what was put in the args", 4, dbUser.id);
+		assertEquals("first name should match what was put in the args", "Superman", dbUser.first_name);
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.last_name);
+	}
+
+	@Test
+	public void createFromInstance() throws Exception {
+		User newUser = new User();
+		newUser.id = 4;
+		newUser.first_name = "Superman";
+		newUser.last_name = "is not as cool as a flawed hero";
+		newUser.create();
+		assertEquals("id should match what was put in the args", 4, newUser.id);
+		assertEquals("first name should match what was put in the args", "Superman", newUser.first_name);
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", newUser.last_name);
+		User dbUser = (User) CaffeineObject.find(User.class, 4);
+		assertEquals("id should match what was put in the args", 4, dbUser.id);
+		assertEquals("first name should match what was put in the args", "Superman", dbUser.first_name);
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.last_name);
+	}
+
+	@Test
+	public void update() throws Exception {
+		Map<String, Object> args = new HashMap<String, Object>();
+		args.put("first_name", "Superman");
+		args.put("last_name", "is not as cool as a flawed hero");
+		User user = (User) CaffeineObject.find(User.class, 2);
+		user.update(args);
+		assertEquals("id should not have been updated", 2, user.id);
+		assertEquals("first name should match what was put in the args", "Superman", user.first_name);
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", user.last_name);
+		User dbUser = (User) CaffeineObject.find(User.class, 2);
+		assertEquals("id should not have been updated", 2, dbUser.id);
+		assertEquals("first name should match what was put in the args", "Superman", dbUser.first_name);
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.last_name);
+	}
+
+	@Test
+	public void updateNonExistentUser() throws Exception {
+		Map<String, Object> args = new HashMap<String, Object>();
+		args.put("first_name", "Superman");
+		args.put("last_name", "is not as cool as a flawed hero");
+		User user = (User) CaffeineObject.find(User.class, 7);
+		user.update(args);
+		assertArrayEquals("no user should have been updated or created", new Object[] {0, null, null}, new Object[] {user.id, user.first_name, user.last_name});
+		User dbUser = (User) CaffeineObject.find(User.class, 7);
+		assertArrayEquals("no user should have been updated or created", new Object[] {0, null, null}, new Object[] {dbUser.id, dbUser.first_name, dbUser.last_name});
+		CaffeineObject.setQueryClass(User.class);
+		List<CaffeineObject> users = Caffeine.executeQuery("select * from users");
+		assertEquals("size of return should match expected", 3, users.size());
+		User user1 = (User) users.get(0);
+		User user2 = (User) users.get(1);
+		User user3 = (User) users.get(2);
+		assertArrayEquals("deleted object should not be in return", new int[] {1, 2, 3}, new int[] {user1.id, user2.id, user3.id});
+		assertArrayEquals("deleted object attrs should not be in return objects", new String[] {"Grawr", "Nick", "Test"}, new String[] {user1.first_name, user2.first_name, user3.first_name});
+	}
+
+	@Test
+	public void delete() throws Exception {
+		User user = (User) CaffeineObject.find(User.class, 3);
+		boolean result = user.delete();
+		assertEquals("return should be whether or not object was deleted", true, result);
+		CaffeineObject.setQueryClass(User.class);
+		List<CaffeineObject> users = Caffeine.executeQuery("select * from users");
+		assertEquals("size of return should match expected", 2, users.size());
+		User user1 = (User) users.get(0);
+		User user2 = (User) users.get(1);
+		assertArrayEquals("deleted object should not be in return", new int[] {1, 2}, new int[] {user1.id, user2.id});
+		assertArrayEquals("deleted object attrs should not be in return objects", new String[] {"Grawr", "Nick"}, new String[] {user1.first_name, user2.first_name});
+	}
+
+	@Test
+	public void deleteNonExistentUser() throws Exception {
+		User user = (User) CaffeineObject.find(User.class, 8);
+		boolean result = user.delete();
+		assertEquals("return true if sql ran without error", true, result);
+		CaffeineObject.setQueryClass(User.class);
+		List<CaffeineObject> users = Caffeine.executeQuery("select * from users");
+		assertEquals("size of return should match expected", 3, users.size());
+		User user1 = (User) users.get(0);
+		User user2 = (User) users.get(1);
+		User user3 = (User) users.get(2);
+		assertArrayEquals("no objects should have been deleted", new int[] {1, 2, 3}, new int[] {user1.id, user2.id, user3.id});
+		assertArrayEquals("no object attrs should have been deleted", new String[] {"Grawr", "Nick", "Test"}, new String[] {user1.first_name, user2.first_name, user3.first_name});
+	}
+
+	@Test
 	public void join() throws Exception {
-		List<CaffeineObject> downloads = downloadLookup.join("downloads.user_id", "users.id").where("users.id = ?", 3).execute();
+		CaffeineObject.setQueryClass(Download.class);
+		List<CaffeineObject> downloads = CaffeineObject.chainable().join("downloads.user_id", "users.id").where("users.id = ?", 3).execute();
+		assertEquals("size of return list should match expected", 1, downloads.size());
+		Download download = (Download) downloads.get(0);
+		assertEquals("id should match expected", 2, download.id);
+		assertEquals("file name should match expected", "FileTest num 2", download.file_file_name);
+		assertEquals("user_id should match expected", 3, download.user_id);
+	}
+
+	@Test
+	public void joinWithChainable() throws Exception {
+		List<CaffeineObject> downloads = CaffeineObject.chainable(Download.class).join("downloads.user_id", "users.id").where("users.id = ?", 3).execute();
 		assertEquals("size of return list should match expected", 1, downloads.size());
 		Download download = (Download) downloads.get(0);
 		assertEquals("id should match expected", 2, download.id);
@@ -157,7 +267,7 @@ public class CaffeineTest {
 
 	@Test
 	public void joinWithSpecificType() throws Exception {
-		List<CaffeineObject> downloads = downloadLookup.join("inner", "downloads.user_id", "users.id").where("users.id = ?", 3).execute();
+		List<CaffeineObject> downloads = CaffeineObject.chainable(Download.class).join("inner", "downloads.user_id", "users.id").where("users.id = ?", 3).execute();
 		assertEquals("size of return list should match expected", downloads.size(), 1);
 		Download download = (Download) downloads.get(0);
 		assertEquals("id should match expected", 2, download.id);
@@ -167,7 +277,8 @@ public class CaffeineTest {
 
 	@Test
 	public void where() throws Exception {
-		List<CaffeineObject> users = userLookup.where("id in (2, 3)").execute();
+		CaffeineObject.setQueryClass(User.class);
+		List<CaffeineObject> users = CaffeineObject.chainable().where("id in (2, 3)").execute();
 		assertEquals("size of return list should match expected", 2, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
@@ -181,7 +292,7 @@ public class CaffeineTest {
 
 	@Test
 	public void whereWithVariables() throws Exception {
-		List<CaffeineObject> users = userLookup.where("id = ?", 2).execute();
+		List<CaffeineObject> users = CaffeineObject.chainable(User.class).where("id = ?", 2).execute();
 		assertEquals("size of return list should match expected", 1, users.size());
 		User user1 = (User) users.get(0);
 		assertEquals("id should match expected", 2, user1.id);
@@ -194,7 +305,7 @@ public class CaffeineTest {
 		List<Object> args = new ArrayList<Object>();
 		args.add(2);
 		args.add(3);
-		List<CaffeineObject> users = userLookup.where("id in (?, ?)", args).execute();
+		List<CaffeineObject> users = CaffeineObject.chainable().where("id in (?, ?)", args).execute();
 		assertEquals("size of return list should match expected", 2, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
@@ -208,7 +319,7 @@ public class CaffeineTest {
 
 	@Test
 	public void or() throws Exception {
-		List<CaffeineObject> users = userLookup.where("id in (2, 3)").or("first_name = 'Grawr'").execute();
+		List<CaffeineObject> users = CaffeineObject.chainable(User.class).where("id in (2, 3)").or("first_name = 'Grawr'").execute();
 		assertEquals("size of return list should match expected", 3, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
@@ -226,7 +337,7 @@ public class CaffeineTest {
 
 	@Test
 	public void orWithVariables() throws Exception {
-		List<CaffeineObject> users = userLookup.where("id = ?", 2).or("id = ?", 3).execute();
+		List<CaffeineObject> users = CaffeineObject.chainable(User.class).where("id = ?", 2).or("id = ?", 3).execute();
 		assertEquals("size of return list should match expected", 2, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
@@ -243,7 +354,7 @@ public class CaffeineTest {
 		List<Object> args = new ArrayList<Object>();
 		args.add(2);
 		args.add(3);
-		List<CaffeineObject> users = userLookup.where("id = 2").or("id in (?, ?)", args).execute();
+		List<CaffeineObject> users = CaffeineObject.chainable(User.class).where("id = 2").or("id in (?, ?)", args).execute();
 		assertEquals("size of return list should match expected", 2, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
@@ -257,8 +368,8 @@ public class CaffeineTest {
 
 	@Test
 	public void getAssociatedHasMany() throws Exception {
-		User user = (User) userLookup.find(2);
-		List<CaffeineObject> downloads = user.getAssociated(downloadLookup);
+		User user = (User) CaffeineObject.find(User.class, 2);
+		List<CaffeineObject> downloads = user.getAssociated(Download.class);
 		assertEquals("size of return should match expected", 2, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -267,8 +378,8 @@ public class CaffeineTest {
 
 	@Test
 	public void getAssociatedHasManyWithForeignKey() throws Exception {
-		User user = (User) userLookup.find(2);
-		List<CaffeineObject> downloads = user.getAssociated(downloadLookup, "org_id");
+		User user = (User) CaffeineObject.find(User.class, 2);
+		List<CaffeineObject> downloads = user.getAssociated(Download.class, "org_id");
 		assertEquals("size of return should match expected", 2, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -277,8 +388,8 @@ public class CaffeineTest {
 
 	@Test
 	public void getAssociatedBelongsTo() throws Exception {
-		Download download = (Download) downloadLookup.find(3);
-		List<CaffeineObject> users = download.getAssociated(userLookup);
+		Download download = (Download) CaffeineObject.find(Download.class, 3);
+		List<CaffeineObject> users = download.getAssociated(User.class);
 		assertEquals("return list should only contain the possessing object", 1, users.size());
 		User user = (User) users.get(0);
 		assertEquals("id should match expected possessing user", 1, user.id);
@@ -286,89 +397,11 @@ public class CaffeineTest {
 
 	@Test
 	public void getAssociatedBelongsToWithForeignKey() throws Exception {
-		Download download = (Download) downloadLookup.find(3);
-		List<CaffeineObject> users = download.getAssociated(userLookup, "org_id");
+		Download download = (Download) CaffeineObject.find(Download.class, 3);
+		List<CaffeineObject> users = download.getAssociated(User.class, "org_id");
 		assertEquals("return list should only contain the possessing object", 1, users.size());
 		User user = (User) users.get(0);
 		assertEquals("id should match expected possessing user", 2, user.id);
-	}
-
-	@Test
-	public void create() throws Exception {
-		Map<String, Object> args = new HashMap<String, Object>();
-		args.put("id", 4);
-		args.put("first_name", "Superman");
-		args.put("last_name", "is not as cool as a flawed hero");
-		User newUser = (User) userLookup.create(args);
-		assertEquals("id should match what was put in the args", 4, newUser.id);
-		assertEquals("first name should match what was put in the args", "Superman", newUser.first_name);
-		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", newUser.last_name);
-		User dbUser = (User) userLookup.find(4);
-		assertEquals("id should match what was put in the args", 4, dbUser.id);
-		assertEquals("first name should match what was put in the args", "Superman", dbUser.first_name);
-		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.last_name);
-	}
-
-	@Test
-	public void update() throws Exception {
-		Map<String, Object> args = new HashMap<String, Object>();
-		args.put("first_name", "Superman");
-		args.put("last_name", "is not as cool as a flawed hero");
-		User user = (User) userLookup.find(2);
-		user.update(args);
-		assertEquals("id should not have been updated", 2, user.id);
-		assertEquals("first name should match what was put in the args", "Superman", user.first_name);
-		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", user.last_name);
-		User dbUser = (User) userLookup.find(2);
-		assertEquals("id should not have been updated", 2, dbUser.id);
-		assertEquals("first name should match what was put in the args", "Superman", dbUser.first_name);
-		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.last_name);
-	}
-
-	@Test
-	public void updateNonExistentUser() throws Exception {
-		Map<String, Object> args = new HashMap<String, Object>();
-		args.put("first_name", "Superman");
-		args.put("last_name", "is not as cool as a flawed hero");
-		User user = (User) userLookup.find(7);
-		user.update(args);
-		assertArrayEquals("no user should have been updated or created", new Object[] {0, null, null}, new Object[] {user.id, user.first_name, user.last_name});
-		User dbUser = (User) userLookup.find(7);
-		assertArrayEquals("no user should have been updated or created", new Object[] {0, null, null}, new Object[] {dbUser.id, dbUser.first_name, dbUser.last_name});
-		List<CaffeineObject> users = userLookup.executeQuery("select * from users");
-		assertEquals("size of return should match expected", 3, users.size());
-		User user1 = (User) users.get(0);
-		User user2 = (User) users.get(1);
-		User user3 = (User) users.get(2);
-		assertArrayEquals("deleted object should not be in return", new int[] {1, 2, 3}, new int[] {user1.id, user2.id, user3.id});
-		assertArrayEquals("deleted object attrs should not be in return objects", new String[] {"Grawr", "Nick", "Test"}, new String[] {user1.first_name, user2.first_name, user3.first_name});
-	}
-
-	@Test
-	public void delete() throws Exception {
-		User user = (User) userLookup.find(3);
-		boolean result = user.delete();
-		assertEquals("return should be whether or not object was deleted", true, result);
-		List<CaffeineObject> users = userLookup.executeQuery("select * from users");
-		assertEquals("size of return should match expected", 2, users.size());
-		User user1 = (User) users.get(0);
-		User user2 = (User) users.get(1);
-		assertArrayEquals("deleted object should not be in return", new int[] {1, 2}, new int[] {user1.id, user2.id});
-		assertArrayEquals("deleted object attrs should not be in return objects", new String[] {"Grawr", "Nick"}, new String[] {user1.first_name, user2.first_name});
-	}
-
-	@Test
-	public void deleteNonExistentUser() throws Exception {
-		User user = (User) userLookup.find(8);
-		boolean result = user.delete();
-		assertEquals("return true if sql ran without error", true, result);
-		List<CaffeineObject> users = userLookup.executeQuery("select * from users");
-		assertEquals("size of return should match expected", 3, users.size());
-		User user1 = (User) users.get(0);
-		User user2 = (User) users.get(1);
-		User user3 = (User) users.get(2);
-		assertArrayEquals("no objects should have been deleted", new int[] {1, 2, 3}, new int[] {user1.id, user2.id, user3.id});
-		assertArrayEquals("no object attrs should have been deleted", new String[] {"Grawr", "Nick", "Test"}, new String[] {user1.first_name, user2.first_name, user3.first_name});
 	}
 
 	// Test helper methods
@@ -377,9 +410,6 @@ public class CaffeineTest {
 	public void setUp() throws Exception {
 		// The database must already exist, but should be blank otherwise.
 		Caffeine.setConfiguration(System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL"), System.getenv("CAFFEINE_DB_USERNAME"), System.getenv("CAFFEINE_DB_PASSWORD"));
-		databaseHandle = new User();
-		userLookup = new User();
-		downloadLookup = new Download();
 		insertTables();
 		insertUsers();
 		insertDownloads();
@@ -387,14 +417,14 @@ public class CaffeineTest {
 
 	@After
 	public void tearDown() throws Exception {
-		databaseHandle.executeUpdate("drop table if exists users");
-		databaseHandle.executeUpdate("drop table if exists downloads");
+		Caffeine.executeUpdate("drop table if exists users");
+		Caffeine.executeUpdate("drop table if exists downloads");
 	}
 
 	public void insertTables() throws Exception {
-		databaseHandle.executeUpdate("drop table if exists users");
-		databaseHandle.executeUpdate("drop table if exists downloads");
-		databaseHandle.executeUpdate("create table if not exists users (" +
+		Caffeine.executeUpdate("drop table if exists users");
+		Caffeine.executeUpdate("drop table if exists downloads");
+		Caffeine.executeUpdate("create table if not exists users (" +
 			"id integer not null, " +
 			"first_name varchar(255), " +
 			"last_name varchar(255), " +
@@ -402,7 +432,7 @@ public class CaffeineTest {
 			"sign_in_count integer, " +
 			"role varchar(255))"
 		);
-		databaseHandle.executeUpdate("create table if not exists downloads (" +
+		Caffeine.executeUpdate("create table if not exists downloads (" +
 			"id integer not null, " +
 			"file_file_name varchar(255), " +
 			"org_id integer, " +
@@ -411,7 +441,7 @@ public class CaffeineTest {
 	}
 
 	private void insertUsers() throws Exception {
-		databaseHandle.executeUpdate("insert into users (id, first_name, last_name, encrypted_password, sign_in_count, role) values " +
+		Caffeine.executeUpdate("insert into users (id, first_name, last_name, encrypted_password, sign_in_count, role) values " +
 			"(1, 'Grawr', 'McPhee', 'qwerqwer', 13, 'admin')," +
 			"(2, 'Nick', 'Case', 'asdfasdf', 0, 'super')," +
 			"(3, 'Test', 'User', 'zxcvzxcv', 3, 'moderator')"
@@ -419,7 +449,7 @@ public class CaffeineTest {
 	}
 
 	private void insertDownloads() throws Exception {
-		databaseHandle.executeUpdate("insert into downloads (id, file_file_name, org_id, user_id) values " +
+		Caffeine.executeUpdate("insert into downloads (id, file_file_name, org_id, user_id) values " +
 				"(1, 'FileTest num 1', 2, 2)," +
 				"(2, 'FileTest num 2', 1, 3)," +
 				"(3, 'FileTest num 3', 2, 1)," +

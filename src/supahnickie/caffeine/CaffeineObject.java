@@ -1,125 +1,141 @@
 package supahnickie.caffeine;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.sql.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class CaffeineObject {
+public class CaffeineObject {
+	static List<String> ignoredFields = new ArrayList<String>();
 	String currentQuery;
 	boolean firstCondition;
 	List<Object> placeholders = new ArrayList<Object>();
 	public String validationErrors = "";
 
-	/* Raw SQL execute, used for INSERT, UPDATE, DELETE */
-
-	private final void executeUpdate(Connection c, PreparedStatement ps) throws Exception {
-		ps.executeUpdate();
-		c.commit();
-		c.close();
-		ps.close();
-		teardown();
+	static {
+		ignoredFields.add("tableName");
+		ignoredFields.add("validationErrors");
+		ignoredFields.add("caffeineAssociations");
 	}
 
-	public final void executeUpdate(String sql) throws Exception {
-		Connection c = setup();
-		executeUpdate(c, c.prepareStatement(sql));
+	/* Internal meta-utilities */
+
+	public static List<String> addIgnoredField(String field) {
+		ignoredFields.add(field);
+		return ignoredFields;
 	}
 
-	public final void executeUpdate(String sql, List<Object> values) throws Exception {
-		Connection c = setup();
-		PreparedStatement ps = c.prepareStatement(sql);
-		int counter = 1;
-		for (Object value : values) {
-			ps.setObject(counter, value);
-			counter++;
+	@SuppressWarnings("rawtypes")
+	public static final void setQueryClass(Class klass) {
+		Caffeine.setQueryClass(klass);
+	}
+
+	public final static CaffeineObject chainable() {
+		return new CaffeineObject();
+	}
+
+	@SuppressWarnings("rawtypes")
+	public final static CaffeineObject chainable(Class klass) {
+		Caffeine.setQueryClass(klass);
+		return new CaffeineObject();
+	}
+
+	/* AR-like CRUD */
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static final CaffeineObject find(Class klass, int i) throws Exception {
+		Connection c = Caffeine.setup();
+		CaffeineObject newInstance = (CaffeineObject) Caffeine.setQueryClass(klass).getConstructor().newInstance();
+		PreparedStatement ps = c.prepareStatement(CaffeineObject.baseQuery() + " where id = ?");
+		ps.setInt(1, i);
+		ResultSet rs = ps.executeQuery();
+		while (rs.next()) {
+			newInstance.setAttrs(rs);
 		}
-		executeUpdate(c, ps);
+		Caffeine.teardown(rs, ps);
+		return newInstance;
 	}
 
-	private final CaffeineObject executeUpdate(Connection c, PreparedStatement ps, boolean returning) throws Exception {
-		if (returning) {
-			ps.executeUpdate();
-			c.commit();
-			setAttrsFromSqlReturn(ps.getGeneratedKeys());
-			c.close();
-			ps.close();
-			teardown();
-			return this;
-		} else {
-			executeUpdate(c, ps);
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public final static CaffeineObject create(Class klass, Map<String, Object> args) {
+		try {
+			Method valid = klass.getMethod("validate", new Class[] { String.class });
+			if ((boolean) valid.invoke(klass.newInstance(), new Object[] { "create" })) {
+				Caffeine.setQueryClass(klass);
+				Object[] argKeys = args.keySet().toArray();
+				String sql = insertInsertPlaceholders(args, argKeys);
+				return Caffeine.executeUpdate(sql, args, argKeys, (CaffeineObject) klass.newInstance());
+			} else {
+				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
+				return null;
+			}
+		} catch (Exception e) {
+			System.out.println(e);
 			return null;
 		}
 	}
 
-	private final CaffeineObject executeUpdate(String sql, Map<String, Object> args, Object[] argKeys) throws Exception {
-		Connection c = setup();
-		PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-		int counter = 1;
-		for (int i = 0; i < argKeys.length; i++) {
-			ps.setObject(counter, args.get(argKeys[i]));
-			counter++;
+	/* Already have an instance in memory, just wanting to persist it to the DB */
+
+	public final CaffeineObject create() {
+		try {
+			if (validate("create")) {
+				Caffeine.setQueryClass(this.getClass());
+				Map<String, Object> args = new HashMap<String, Object>();
+				Field[] fields = Caffeine.getQueryClass().getFields();
+				for (Field f : fields) {
+					String[] nameSplit = f.toString().split("\\.");
+					String simpleName = nameSplit[nameSplit.length - 1];
+					if ( !(ignoredFields.contains(simpleName)) ) {
+						args.put(simpleName, f.get(this));
+					}
+				}
+				Object[] argKeys = args.keySet().toArray();
+				String sql = insertInsertPlaceholders(args, argKeys);
+				return Caffeine.executeUpdate(sql, args, argKeys, this);
+			} else {
+				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
+				return null;
+			}
+		} catch (Exception e) {
+			System.out.println(e);
+			return null;
 		}
-		return executeUpdate(c, ps, true);
 	}
 
-	/* Raw SQL query, used for SELECT */
-
-	private final List<CaffeineObject> executeQuery(PreparedStatement ps) throws Exception {
-		List<CaffeineObject> ret = new ArrayList<CaffeineObject>();
-		List<HashMap<String, Object>> table = new ArrayList<HashMap<String, Object>>();
-		ResultSet rs = ps.executeQuery();
-		Row.formTable(rs, table);
-		for (HashMap<String, Object> row : table) {
-			CaffeineObject newInstance = (CaffeineObject) getClass().getConstructor().newInstance();
-			for (String column: row.keySet()) {
-				newInstance.setAttr(column, row.get(column));
-		  }
-			ret.add(newInstance);
+	public final CaffeineObject update(Map<String, Object> args) {
+		try {
+			if (validate("update")) {
+				Caffeine.setQueryClass(this.getClass());
+				Object[] argKeys = args.keySet().toArray();
+				String sql = insertUpdatePlaceholders(args, argKeys);
+				return Caffeine.executeUpdate(sql, args, argKeys, this);
+			} else {
+				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
+				return null;
+			}
+		} catch (Exception e) {
+			System.out.println(e);
+			return null;
 		}
-		teardown(rs, ps);
-		return ret;
 	}
 
-	public final List<CaffeineObject> executeQuery(String sql) throws Exception {
-		return executeQuery(setup().prepareStatement(sql));
-	}
-
-	public final List<CaffeineObject> executeQuery(String sql, List<Object> values) throws Exception {
-		return executeQuery(sql, values, null);
-	}
-
-	public final List<CaffeineObject> executeQuery(String sql, List<Object> values, Map<String, Object> options) throws Exception {
-		if (!(options == null)) { sql = appendOptions(sql, options); }
-		PreparedStatement ps = setup().prepareStatement(sql);
-		int counter = 1;
-		for (Object value : values) {
-			ps.setObject(counter, value);
-			counter++;
+	public final boolean delete() {
+		try {
+			Caffeine.setQueryClass(this.getClass());
+			Field tableNameField = Caffeine.getQueryClass().getDeclaredField("tableName");
+			Field field = Caffeine.getQueryClass().getDeclaredField("id");
+			String tableName = (String) tableNameField.get(null);
+			int id = field.getInt(this);
+			String sql = "delete from " + tableName + " where id = " + id;
+			Caffeine.executeUpdate(sql);
+			return true;
+		} catch (Exception e) {
+			System.out.println(e);
+			return false;
 		}
-		return executeQuery(ps);
-	}
-
-	public final List<CaffeineObject> executeQuery(Map<String, Object> args) throws Exception {
-		return executeQuery(args, null);
-	}
-
-	public final List<CaffeineObject> executeQuery(Map<String, Object> args, Map<String, Object> options) throws Exception {
-		String sql = baseQuery() + " where ";
-		List<String> keys = new ArrayList<>(args.keySet());
-		for (int i = 0; i < keys.size(); i++) {
-			sql = sql + keys.get(i) + " = ?";
-			if ( (args.keySet().size() > 1) && (i != args.keySet().size() - 1) ) { sql = sql + " and "; }
-		}
-		if (!(options == null)) { sql = appendOptions(sql, options); }
-		PreparedStatement ps = setup().prepareStatement(sql);
-		int counter = 1;
-		for (String column : keys) {
-			ps.setObject(counter, args.get(column));
-			counter++;
-		}
-		return executeQuery(ps);
 	}
 
 	/* AR-like querying methods */
@@ -127,7 +143,7 @@ public abstract class CaffeineObject {
 	@SuppressWarnings("unchecked")
 	public final List<CaffeineObject> execute() throws Exception {
 		String sql = getCurrentQuery();
-		PreparedStatement ps = setup().prepareStatement(sql);
+		PreparedStatement ps = Caffeine.setup().prepareStatement(sql);
 		int counter = 1;
 		for (int i = 0; i < getPlaceholders().size(); i++) {
 			if (getPlaceholders().get(i).getClass().equals(ArrayList.class)) {
@@ -141,22 +157,9 @@ public abstract class CaffeineObject {
 				counter++;
 			}
 		}
-		List<CaffeineObject> results = executeQuery(ps);
+		List<CaffeineObject> results = Caffeine.executeQuery(ps);
 		resetQueryState();
 		return results;
-	}
-
-	public final CaffeineObject find(int i) throws Exception {
-		Connection c = setup();
-		CaffeineObject newInstance = (CaffeineObject) getClass().getConstructor().newInstance();
-		PreparedStatement ps = c.prepareStatement(baseQuery() + " where id = ?");
-		ps.setInt(1, i);
-		ResultSet rs = ps.executeQuery();
-		while (rs.next()) {
-			newInstance.setAttrs(rs);
-		}
-		teardown(rs, ps);
-		return newInstance;
 	}
 
 	public final CaffeineObject join(String typeOfJoin, String fromJoin, String toJoin) throws Exception {
@@ -210,99 +213,55 @@ public abstract class CaffeineObject {
 		return or(condition);
 	}
 
-	public final List<CaffeineObject> getAssociated(CaffeineObject associatedLookup) throws Exception {
-		return getAssociated(associatedLookup, null);
+	@SuppressWarnings("rawtypes")
+	public final List<CaffeineObject> getAssociated(Class associated) throws Exception {
+		return getAssociated(associated, null);
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public final List<CaffeineObject> getAssociated(CaffeineObject associatedLookup, String foreignKey) throws Exception, SQLException, ClassNotFoundException {
-		Map<Class, String> associations = (Map<Class, String>) getClass().getDeclaredField("caffeineAssociations").get(null);
-		String type = associations.get(associatedLookup.getClass());
+	public final List<CaffeineObject> getAssociated(Class associated, String foreignKey) throws Exception, SQLException, ClassNotFoundException {
+		Map<Class, String> associations = (Map<Class, String>) Caffeine.setQueryClass(this.getClass()).getDeclaredField("caffeineAssociations").get(null);
+		String type = associations.get(associated);
 		switch (type) {
 			case "hasMany":
-				return getHasMany(associatedLookup, foreignKey);
+				return getHasMany(associated, foreignKey);
 			case "belongsTo":
-				return getBelongsTo(associatedLookup, foreignKey);
+				return getBelongsTo(associated, foreignKey);
 			default:
 				break;
 		}
 		return null;
 	}
 
-	private final List<CaffeineObject> getHasMany(CaffeineObject associatedLookup, String foreignKey) throws Exception {
-		Field tableNameField = getClass().getDeclaredField("tableName");
-		Field associatedTableNameField = associatedLookup.getClass().getDeclaredField("tableName");
-		Field field = getClass().getDeclaredField("id");
+	@SuppressWarnings("rawtypes")
+	private final List<CaffeineObject> getHasMany(Class associated, String foreignKey) throws Exception {
+		Field tableNameField = Caffeine.getQueryClass().getDeclaredField("tableName");
+		Field associatedTableNameField = associated.getDeclaredField("tableName");
+		Field field = Caffeine.getQueryClass().getDeclaredField("id");
 		String tableName = (String) tableNameField.get(null);
 		String associatedTableName = (String) associatedTableNameField.get(null);
 		int id = field.getInt(this);
 		String foreignLookup = (foreignKey == null) ? tableName.substring(0, tableName.length() - 1) + "_id" : foreignKey;
 		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where " + foreignLookup + " = " + id;
-		return associatedLookup.executeQuery(sql);
+		Caffeine.setQueryClass(associated);
+		return Caffeine.executeQuery(sql);
 	}
 
-	private final List<CaffeineObject> getBelongsTo(CaffeineObject associatedLookup, String foreignKey) throws Exception {
-		Field associatedTableNameField = associatedLookup.getClass().getDeclaredField("tableName");
+	@SuppressWarnings("rawtypes")
+	private final List<CaffeineObject> getBelongsTo(Class associated, String foreignKey) throws Exception {
+		Field associatedTableNameField = associated.getDeclaredField("tableName");
 		String associatedTableName = (String) associatedTableNameField.get(null);
-		Field field = (foreignKey == null) ? getClass().getDeclaredField(associatedTableName.substring(0, associatedTableName.length() -1) + "_id") : getClass().getDeclaredField(foreignKey);
+		Field field = (foreignKey == null) ? Caffeine.getQueryClass().getDeclaredField(associatedTableName.substring(0, associatedTableName.length() -1) + "_id") : Caffeine.getQueryClass().getDeclaredField(foreignKey);
 		int id = field.getInt(this);
 		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where id = " + id;
-		return associatedLookup.executeQuery(sql);
-	}
-
-	/* Create, Update, Delete methods */
-
-	public final CaffeineObject create(Map<String, Object> args) {
-		try {
-			if (validate("create")) {
-				Object[] argKeys = args.keySet().toArray();
-				String sql = insertInsertPlaceholders(args, argKeys);
-				return executeUpdate(sql, args, argKeys);
-			} else {
-				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
-				return null;
-			}
-		} catch (Exception e) {
-			System.out.println(e);
-			return null;
-		}
-	}
-
-	public final CaffeineObject update(Map<String, Object> args) {
-		try {
-			if (validate("update")) {
-				Object[] argKeys = args.keySet().toArray();
-				String sql = insertUpdatePlaceholders(args, argKeys);
-				return executeUpdate(sql, args, argKeys);
-			} else {
-				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
-				return null;
-			}
-		} catch (Exception e) {
-			System.out.println(e);
-			return null;
-		}
-	}
-
-	public final boolean delete() {
-		try {
-			Field tableNameField = getClass().getDeclaredField("tableName");
-			Field field = getClass().getDeclaredField("id");
-			String tableName = (String) tableNameField.get(null);
-			int id = field.getInt(this);
-			String sql = "delete from " + tableName + " where id = " + id;
-			executeUpdate(sql);
-			return true;
-		} catch (Exception e) {
-			System.out.println(e);
-			return false;
-		}
+		Caffeine.setQueryClass(associated);
+		return Caffeine.executeQuery(sql);
 	}
 
 	/* Helper methods */
 
-	private final String insertInsertPlaceholders(Map<String, Object> args, Object[] argKeys) throws Exception {
-		Field tableNameField = getClass().getDeclaredField("tableName");
+	private final static String insertInsertPlaceholders(Map<String, Object> args, Object[] argKeys) throws Exception {
+		Field tableNameField = Caffeine.getQueryClass().getDeclaredField("tableName");
 		String tableName = (String) tableNameField.get(null);
 		String sql = "insert into " + tableName + " (";
 		for (int i = 0; i < argKeys.length; i++) {
@@ -319,8 +278,8 @@ public abstract class CaffeineObject {
 	}
 
 	private final String insertUpdatePlaceholders(Map<String, Object> args, Object[] argKeys) throws Exception {
-		Field tableNameField = getClass().getDeclaredField("tableName");
-		Field field = getClass().getDeclaredField("id");
+		Field tableNameField = Caffeine.getQueryClass().getDeclaredField("tableName");
+		Field field = Caffeine.getQueryClass().getDeclaredField("id");
 		String tableName = (String) tableNameField.get(null);
 		int id = field.getInt(this);
 		String sql = "update " + tableName + " set ";
@@ -349,7 +308,7 @@ public abstract class CaffeineObject {
 		return this;
 	}
 
-	private static String appendOptions(String sql, Map<String, Object> options) {
+	static String appendOptions(String sql, Map<String, Object> options) {
 		if ((options != null) && (!options.isEmpty()) ) {
 			sql = sql + " ";
 			if (options.containsKey("groupBy")) { sql = sql + "group by " + options.get("groupBy") + " "; }
@@ -360,16 +319,18 @@ public abstract class CaffeineObject {
 	}
 
 	/* validationType being either "update" or "create" */
-	public abstract boolean validate(String validationType);
+	public boolean validate(String validationType) {
+		return true;
+	}
 
 	public final String getValidationErrors() throws Exception {
-		Field field = getClass().getDeclaredField("validationErrors");
+		Field field = Caffeine.getQueryClass().getDeclaredField("validationErrors");
 		String errors = (String) field.get(this);
 		return errors;
 	}
 
-	private final String baseQuery() throws Exception {
-		Field field = getClass().getDeclaredField("tableName");
+	static final String baseQuery() throws Exception {
+		Field field = Caffeine.getQueryClass().getDeclaredField("tableName");
 		String tableName = (String) field.get(null);
 		String sql = "select " + tableName + ".* from " + tableName;
 		return sql;
@@ -409,8 +370,8 @@ public abstract class CaffeineObject {
 		this.firstCondition = bool;
 	}
 
-	private final void setAttrs(ResultSet rs) throws Exception {
-		Field[] fields = getClass().getDeclaredFields();
+	final void setAttrs(ResultSet rs) throws Exception {
+		Field[] fields = Caffeine.getQueryClass().getDeclaredFields();
 		for (Field f : fields) {
 			try {
 				String[] attrIdentifier = f.toString().split("\\.");
@@ -421,7 +382,7 @@ public abstract class CaffeineObject {
 		}
 	}
 
-	private final void setAttrsFromSqlReturn(ResultSet rs) throws Exception {
+	final void setAttrsFromSqlReturn(ResultSet rs) throws Exception {
 		if (rs.next()) {
 			ResultSetMetaData rsmd = rs.getMetaData();
 			int numOfCol = rsmd.getColumnCount();
@@ -431,28 +392,12 @@ public abstract class CaffeineObject {
 		}
 	}
 
-	private final void setAttr(String column, Object value) throws Exception {
+	final void setAttr(String column, Object value) throws Exception {
 		try {
-			Field field = getClass().getDeclaredField(column);
+			Field field = Caffeine.getQueryClass().getDeclaredField(column);
 			field.set(this, value);
 		} catch (Exception e) {
 			// Do nothing
 		}
-	}
-
-	/* Connection handling */
-
-	private final static Connection setup() {
-		return Caffeine.setup();
-	}
-
-	private final static void teardown() {
-		Caffeine.teardown();
-	}
-
-	private final static void teardown(ResultSet rs, PreparedStatement ps) throws Exception {
-		rs.close();
-		ps.close();
-		teardown();
 	}
 }
