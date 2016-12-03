@@ -3,8 +3,12 @@ package supahnickie.caffeine;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class Caffeine {
 	@SuppressWarnings("rawtypes")
@@ -61,6 +65,37 @@ public final class Caffeine {
 	@SuppressWarnings("rawtypes")
 	static final Class getQueryClass() { return currentQueryClass; }
 
+	static final PreparedStatement replaceNamedParameters(Connection c, String sql, List<Object> values) throws Exception {
+		int counter = 1;
+		PreparedStatement ps = null;
+		Pattern p = Pattern.compile("\\$\\d*");
+		Matcher m = p.matcher(sql);
+		List<String> allMatches = new ArrayList<String>();
+		Queue<Object> replacementVals = new LinkedList<Object>();
+		while (m.find()) { allMatches.add(m.group()); }
+		for (String placeholder : allMatches) {
+			int indexToGrab = new Integer(placeholder.split("\\$")[1]) - 1;
+			replacementVals.add(values.get(indexToGrab));
+		}
+		sql = sql.replaceAll("\\$\\d*", "?");
+		ps = c.prepareStatement(sql);
+		while (!replacementVals.isEmpty()) {
+			ps.setObject(counter, replacementVals.poll());
+			counter++;
+		}
+		return ps;
+	}
+	
+	static final PreparedStatement replaceJDBCParameters(Connection c, String sql, List<Object> values) throws Exception {
+		int counter = 1;
+		PreparedStatement ps = c.prepareStatement(sql);
+		for (Object value : values) {
+			ps.setObject(counter, value);
+			counter++;			
+		}
+		return ps;
+	}
+	
 	/* Insert, update, delete SQL methods */
 
 	static final void executeUpdate(Connection c, PreparedStatement ps) throws Exception {
@@ -78,12 +113,7 @@ public final class Caffeine {
 
 	public static final void executeUpdate(String sql, List<Object> values) throws Exception {
 		Connection c = setup();
-		PreparedStatement ps = c.prepareStatement(sql);
-		int counter = 1;
-		for (Object value : values) {
-			ps.setObject(counter, value);
-			counter++;
-		}
+		PreparedStatement ps = (sql.contains("$")) ? replaceNamedParameters(c, sql, values) : replaceJDBCParameters(c, sql, values);
 		executeUpdate(c, ps);
 	}
 

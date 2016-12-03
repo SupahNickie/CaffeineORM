@@ -13,6 +13,18 @@ import supahnickie.testClasses.*;
 public class CaffeineTest {
 
 	@Test
+	public void executeUpdateWithNameParameters() throws Exception {
+		List<Object> args = new ArrayList<Object>();
+		args.add(6);
+		args.add("McPhee");
+		Caffeine.executeUpdate("insert into users (id, first_name, sign_in_count) values ($1, $2, $1)", args);
+		User user = (User) CaffeineObject.find(User.class, 6);
+		assertEquals("id should match $1 arg", 6, user.getId());
+		assertEquals("sign_in_count should match $1 arg", 6, user.getSignInCount());
+		assertEquals("first_name should match $2 arg", "McPhee", user.getFirstName());
+	}
+
+	@Test
 	public void executeUpdate() throws Exception {
 		Caffeine.executeUpdate("insert into downloads (id, org_id, file_file_name) values (15, 1, 'download1'), (16, 1, 'download2')");
 		CaffeineObject.setQueryClass(Download.class);
