@@ -450,10 +450,10 @@ public class CaffeineTest {
 
 	private void insertDownloads() throws Exception {
 		Caffeine.executeUpdate("insert into downloads (id, file_file_name, org_id, user_id) values " +
-				"(1, 'FileTest num 1', 2, 2)," +
-				"(2, 'FileTest num 2', 1, 3)," +
-				"(3, 'FileTest num 3', 2, 1)," +
-				"(4, 'FileTest num 4', 3, 2)"
-			);
+			"(1, 'FileTest num 1', 2, 2)," +
+			"(2, 'FileTest num 2', 1, 3)," +
+			"(3, 'FileTest num 3', 2, 1)," +
+			"(4, 'FileTest num 4', 3, 2)"
+		);
 	}
 }
