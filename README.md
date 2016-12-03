@@ -70,6 +70,26 @@ CaffeineObject.setQueryClass(User.class);
 List<CaffeineObject> smithUsers = Caffeine.executeQuery("select * from users where last_name ilike ? or first_name ilike ?", list, optionsMap);
 ```
 
+PostgreSQL style named parameters can be used as well with a list of arguments for either DB updates or selects. `IN` syntax is also supported.
+```
+List<Object> list = new ArrayList<Object>();
+list.add(5);
+list.add(8);
+List<String> names = new ArrayList<String>();
+names.add("Paul");
+names.add("Bunyan");
+names.add("The Third");
+list.add(names);
+Caffeine.setQueryClass(User.class);
+List<CaffeineObject> users = Caffeine.executeQuery("select * from users where id = $1 or id = $2 or first_name in ($3) and sign_in_count > $2", list);
+// select * from users where id = 5 or id = 8 or first_name in ('Paul', 'Bunyan', 'The Third') and sign_in_count > 8
+
+List<Object> list = new ArrayList<Object>();
+list.add("Grawr");
+list.add(3);
+Caffeine.executeUpdate("insert into users set (favorite_number, sign_in_count, first_name, a_number_between_2_and_4) values ($2, $2, $1, $2);
+```
+
 AR-like where with HashMap args and additional options.
 ```
 Map<String, Object> map = new HashMap<String, Object>();

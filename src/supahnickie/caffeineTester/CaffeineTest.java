@@ -17,7 +17,7 @@ public class CaffeineTest {
 		List<Object> args = new ArrayList<Object>();
 		args.add(6);
 		args.add("McPhee");
-		Caffeine.executeUpdate("insert into users (id, first_name, sign_in_count) values ($1, $2, $1)", args);
+		Caffeine.executeUpdate("insert into users (first_name, id, sign_in_count) values ($2, $1, $1)", args);
 		User user = (User) CaffeineObject.find(User.class, 6);
 		assertEquals("id should match $1 arg", 6, user.getId());
 		assertEquals("sign_in_count should match $1 arg", 6, user.getSignInCount());
