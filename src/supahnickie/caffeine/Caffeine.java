@@ -65,6 +65,7 @@ public final class Caffeine {
 	@SuppressWarnings("rawtypes")
 	static final Class getQueryClass() { return currentQueryClass; }
 
+	@SuppressWarnings("unchecked")
 	static final PreparedStatement replaceNamedParameters(Connection c, String sql, List<Object> values) throws Exception {
 		int counter = 1;
 		PreparedStatement ps = null;
@@ -75,7 +76,17 @@ public final class Caffeine {
 		while (m.find()) { allMatches.add(m.group()); }
 		for (String placeholder : allMatches) {
 			int indexToGrab = new Integer(placeholder.split("\\$")[1]) - 1;
-			replacementVals.add(values.get(indexToGrab));
+			Object val = values.get(indexToGrab);
+			if (val.getClass().equals(ArrayList.class)) {
+				List<Object> vals = (ArrayList<Object>) val;
+				String arrayPlaceholder = "";
+				for (int i = 0; i < vals.size() - 1; i++) { arrayPlaceholder = arrayPlaceholder.concat("?, "); }
+				arrayPlaceholder = arrayPlaceholder.concat("?");
+				sql = sql.replaceAll("\\$" + (indexToGrab + 1), arrayPlaceholder);
+				for (int j = 0; j < vals.size(); j++) { replacementVals.add(vals.get(j)); }
+			} else {
+				replacementVals.add(val);
+			}
 		}
 		sql = sql.replaceAll("\\$\\d*", "?");
 		ps = c.prepareStatement(sql);
@@ -165,13 +176,9 @@ public final class Caffeine {
 	}
 
 	public static final List<CaffeineObject> executeQuery(String sql, List<Object> values, Map<String, Object> options) throws Exception {
+		Connection c = setup();
 		if (!(options == null)) { sql = CaffeineObject.appendOptions(sql, options); }
-		PreparedStatement ps = setup().prepareStatement(sql);
-		int counter = 1;
-		for (Object value : values) {
-			ps.setObject(counter, value);
-			counter++;
-		}
+		PreparedStatement ps = (sql.contains("$")) ? replaceNamedParameters(c, sql, values) : replaceJDBCParameters(c, sql, values);
 		return executeQuery(ps);
 	}
 

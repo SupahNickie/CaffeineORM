@@ -13,7 +13,7 @@ import supahnickie.testClasses.*;
 public class CaffeineTest {
 
 	@Test
-	public void executeUpdateWithNameParameters() throws Exception {
+	public void executeUpdateWithNamedParameters() throws Exception {
 		List<Object> args = new ArrayList<Object>();
 		args.add(6);
 		args.add("McPhee");
@@ -62,6 +62,48 @@ public class CaffeineTest {
 		assertEquals("download1 org_id should match seed", 2, download1.org_id);
 		assertEquals("download2 file name should match seed", "FileTest num 2", download2.file_file_name);
 		assertEquals("download2 org_id should match seed", 1, download2.org_id);
+	}
+
+	@Test
+	public void executeQueryWithNamedParamsAndListArgs() throws Exception {
+		List<Object> args = new ArrayList<Object>();
+		args.add("FileTest num 2");
+		args.add(2);
+		CaffeineObject.setQueryClass(Download.class);
+		List<CaffeineObject> downloads = Caffeine.executeQuery("select * from downloads where file_file_name = $1 or org_id = $2 order by id asc", args);
+		assertEquals("size of return array should match expected return", 3, downloads.size());
+		Download download1 = (Download) downloads.get(0);
+		Download download2 = (Download) downloads.get(1);
+		assertEquals("download1 file name should match seed", "FileTest num 1", download1.file_file_name);
+		assertEquals("download1 org_id should match seed", 2, download1.org_id);
+		assertEquals("download2 file name should match seed", "FileTest num 2", download2.file_file_name);
+		assertEquals("download2 org_id should match seed", 1, download2.org_id);
+	}
+
+	@Test
+	public void executeQueryWithNamedParamsAndInStatement() throws Exception {
+		List<Object> args = new ArrayList<Object>();
+		List<Integer> orgIdArg = new ArrayList<Integer>();
+		List<String> filenameArg = new ArrayList<String>();
+		orgIdArg.add(1);
+		orgIdArg.add(3);
+		filenameArg.add("FileTest num 4");
+		filenameArg.add("FileTest num 1");
+		filenameArg.add("FileTest num 2");
+		args.add(orgIdArg);
+		args.add(filenameArg);
+		CaffeineObject.setQueryClass(Download.class);
+		List<CaffeineObject> downloads = Caffeine.executeQuery("select * from downloads where org_id in ($1) or file_file_name in ($2) order by id asc", args);
+		assertEquals("size of return array should match expected return", 3, downloads.size());
+		Download download1 = (Download) downloads.get(0);
+		Download download2 = (Download) downloads.get(1);
+		Download download3 = (Download) downloads.get(2);
+		assertEquals("download1 file name should match seed", "FileTest num 1", download1.file_file_name);
+		assertEquals("download1 org_id should match seed", 2, download1.org_id);
+		assertEquals("download2 file name should match seed", "FileTest num 2", download2.file_file_name);
+		assertEquals("download2 org_id should match seed", 1, download2.org_id);
+		assertEquals("download3 file name should match seed", "FileTest num 4", download3.file_file_name);
+		assertEquals("download3 org_id should match seed", 3, download3.org_id);
 	}
 
 	@Test
