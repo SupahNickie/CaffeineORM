@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import org.junit.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 import supahnickie.caffeine.*;
@@ -120,6 +121,34 @@ public class CaffeineTest {
 		assertEquals("download1 org_id should match seed", 2, download1.org_id);
 		assertEquals("download2 file name should match seed", "FileTest num 2", download2.file_file_name);
 		assertEquals("download2 org_id should match seed", 1, download2.org_id);
+	}
+
+	@Test
+	public void executeQueryWithListArgsAndJDBCInPlaceholder() throws Exception {
+		List<Object> args = new ArrayList<Object>();
+		args.add("FileTest num 2");
+		List<Integer> arrayArg = new LinkedList<Integer>();
+		arrayArg.add(2);
+		arrayArg.add(3);
+		arrayArg.add(4);
+		arrayArg.add(5);
+		args.add(arrayArg);
+		List<Integer> otherArrayArg = new LinkedList<Integer>();
+		otherArrayArg.add(1);
+		otherArrayArg.add(6);
+		args.add(otherArrayArg);
+		CaffeineObject.setQueryClass(Download.class);
+		List<CaffeineObject> downloads = Caffeine.executeQuery("select * from downloads where file_file_name = ? or id in (?) or org_id in (?) order by id asc", args);
+		assertEquals("size of return array should match expected return", 3, downloads.size());
+		Download download1 = (Download) downloads.get(0);
+		Download download2 = (Download) downloads.get(1);
+		Download download3 = (Download) downloads.get(2);
+		assertEquals("download1 file name should match seed", "FileTest num 2", download1.file_file_name);
+		assertEquals("download1 id should match seed", 2, download1.id);
+		assertEquals("download2 file name should match seed", "FileTest num 3", download2.file_file_name);
+		assertEquals("download2 id should match seed", 3, download2.id);
+		assertEquals("download3 file name should match seed", "FileTest num 4", download3.file_file_name);
+		assertEquals("download3 id should match seed", 4, download3.id);
 	}
 
 	@Test

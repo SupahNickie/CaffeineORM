@@ -77,8 +77,8 @@ public final class Caffeine {
 		for (String placeholder : allMatches) {
 			int indexToGrab = new Integer(placeholder.split("\\$")[1]) - 1;
 			Object val = values.get(indexToGrab);
-			if (val.getClass().equals(ArrayList.class)) {
-				List<Object> vals = (ArrayList<Object>) val;
+			if (val.getClass().equals(ArrayList.class) || val.getClass().equals(LinkedList.class)) {
+				List<Object> vals = (List<Object>) val;
 				String arrayPlaceholder = "";
 				for (int i = 0; i < vals.size() - 1; i++) { arrayPlaceholder = arrayPlaceholder.concat("?, "); }
 				arrayPlaceholder = arrayPlaceholder.concat("?");
@@ -97,16 +97,49 @@ public final class Caffeine {
 		return ps;
 	}
 	
+	@SuppressWarnings("unchecked")
 	static final PreparedStatement replaceJDBCParameters(Connection c, String sql, List<Object> values) throws Exception {
 		int counter = 1;
+		sql = injectAdditionalPlaceholders(sql, values);
 		PreparedStatement ps = c.prepareStatement(sql);
 		for (Object value : values) {
-			ps.setObject(counter, value);
-			counter++;			
+			if (value.getClass().equals(ArrayList.class) || value.getClass().equals(LinkedList.class)) {
+				List<Object> vals = (List<Object>) value;
+				for (int j = 0; j < vals.size(); j++) {
+					ps.setObject(counter, vals.get(j));
+					counter++;
+				}
+			} else {
+				ps.setObject(counter, value);
+				counter++;
+			}
 		}
 		return ps;
 	}
-	
+
+	@SuppressWarnings("unchecked")
+	private static final String injectAdditionalPlaceholders(String sql, List<Object> values) {
+		Pattern p = Pattern.compile("\\?");
+		Matcher m = p.matcher(sql);
+		int index = 0;
+		while (m.find()) {
+			Object newVal = values.get(index);
+			if (newVal.getClass().equals(ArrayList.class) || newVal.getClass().equals(LinkedList.class)) {
+				List<Object> vals = (List<Object>) newVal;
+				String arrayPlaceholder = "";
+				for (int i = 0; i < vals.size() - 1; i++) {
+					arrayPlaceholder = arrayPlaceholder.concat("?, ");
+				}
+				arrayPlaceholder = arrayPlaceholder.concat("?");
+				sql = sql.replaceFirst("\\(\\?\\)", "( " + arrayPlaceholder + " )");
+				index++;
+			} else {
+				index++;
+			}
+		}
+		return sql;
+	}
+
 	/* Insert, update, delete SQL methods */
 
 	static final void executeUpdate(Connection c, PreparedStatement ps) throws Exception {

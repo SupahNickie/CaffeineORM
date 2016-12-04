@@ -58,16 +58,22 @@ CaffeineObject.setQueryClass(User.class);
 List<CaffeineObject> admins = Caffeine.executeQuery("select * from users where role = 'super' limit 3");
 ```
 
-SQL fragment with placeholder values, List of arguments, and additional options. As with any lookup in Caffeine, it must be told what class of objects to return.
+SQL fragment with placeholder values, List of arguments, and additional options. As with any lookup in Caffeine, it must be told what class of objects to return. `IN` syntax is also supported.
 ```
 List<Object> list = new ArrayList<Object>();
 list.add("Smith");
 list.add("Bruce");
+List<Integer> idArg = new LinkedList<Integer>();
+idArg.add(2);
+idArg.add(3);
+idArg.add(6);
+list.add(idArg);
 Map<String, Object> optionsMap = new HashMap<String, Object>();
 optionsMap.put("limit", 5);
 optionsMap.put("orderBy", "created_at desc");
 CaffeineObject.setQueryClass(User.class);
-List<CaffeineObject> smithUsers = Caffeine.executeQuery("select * from users where last_name ilike ? or first_name ilike ?", list, optionsMap);
+List<CaffeineObject> smithUsers = Caffeine.executeQuery("select * from users where last_name ilike ? or first_name ilike ? or id in (?)", list, optionsMap);
+// select * from users where last_name ilike 'Smith' or first_name ilike 'Bruce' or id in ( 2, 3, 6 ) order by created_at desc limit 5
 ```
 
 PostgreSQL style named parameters can be used as well with a list of arguments for either DB updates or selects. `IN` syntax is also supported.
