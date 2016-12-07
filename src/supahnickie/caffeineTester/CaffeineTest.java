@@ -233,15 +233,14 @@ public class CaffeineTest {
 	@Test
 	public void create() throws Exception {
 		Map<String, Object> args = new HashMap<String, Object>();
-		args.put("id", 4);
 		args.put("first_name", "Superman");
 		args.put("last_name", "is not as cool as a flawed hero");
 		User newUser = (User) CaffeineObject.create(User.class, args);
-		assertEquals("id should match what was put in the args", 4, newUser.getId());
+		assertEquals("id should match what is next in the DB sequence", 4, newUser.getId());
 		assertEquals("first name should match what was put in the args", "Superman", newUser.getFirstName());
 		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", newUser.getLastName());
 		User dbUser = (User) CaffeineObject.find(User.class, 4);
-		assertEquals("id should match what was put in the args", 4, dbUser.getId());
+		assertEquals("id should match what is next in the DB sequence", 4, dbUser.getId());
 		assertEquals("first name should match what was put in the args", "Superman", dbUser.getFirstName());
 		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.getLastName());
 	}
@@ -249,15 +248,14 @@ public class CaffeineTest {
 	@Test
 	public void createFromInstance() throws Exception {
 		User newUser = new User();
-		newUser.setId(4);
 		newUser.setFirstName("Superman");
 		newUser.setLastName("is not as cool as a flawed hero");
 		newUser.create();
-		assertEquals("id should match what was put in the args", 4, newUser.getId());
+		assertEquals("id should match what is next in the DB sequence", 4, newUser.getId());
 		assertEquals("first name should match what was put in the args", "Superman", newUser.getFirstName());
 		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", newUser.getLastName());
 		User dbUser = (User) CaffeineObject.find(User.class, 4);
-		assertEquals("id should match what was put in the args", 4, dbUser.getId());
+		assertEquals("id should match what is next in the DB sequence", 4, dbUser.getId());
 		assertEquals("first name should match what was put in the args", "Superman", dbUser.getFirstName());
 		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.getLastName());
 	}
@@ -508,7 +506,7 @@ public class CaffeineTest {
 		Caffeine.executeUpdate("drop table if exists users");
 		Caffeine.executeUpdate("drop table if exists downloads");
 		Caffeine.executeUpdate("create table if not exists users (" +
-			"id integer not null, " +
+			"id serial primary key, " +
 			"first_name varchar(255), " +
 			"last_name varchar(255), " +
 			"encrypted_password varchar(255), " +
@@ -516,7 +514,7 @@ public class CaffeineTest {
 			"role varchar(255))"
 		);
 		Caffeine.executeUpdate("create table if not exists downloads (" +
-			"id integer not null, " +
+			"id serial primary key, " +
 			"file_file_name varchar(255), " +
 			"org_id integer, " +
 			"user_id integer)"
@@ -524,19 +522,19 @@ public class CaffeineTest {
 	}
 
 	private void insertUsers() throws Exception {
-		Caffeine.executeUpdate("insert into users (id, first_name, last_name, encrypted_password, sign_in_count, role) values " +
-			"(1, 'Grawr', 'McPhee', 'qwerqwer', 13, 'admin')," +
-			"(2, 'Nick', 'Case', 'asdfasdf', 0, 'super')," +
-			"(3, 'Test', 'User', 'zxcvzxcv', 3, 'moderator')"
+		Caffeine.executeUpdate("insert into users (first_name, last_name, encrypted_password, sign_in_count, role) values " +
+			"('Grawr', 'McPhee', 'qwerqwer', 13, 'admin')," +
+			"('Nick', 'Case', 'asdfasdf', 0, 'super')," +
+			"('Test', 'User', 'zxcvzxcv', 3, 'moderator')"
 		);
 	}
 
 	private void insertDownloads() throws Exception {
-		Caffeine.executeUpdate("insert into downloads (id, file_file_name, org_id, user_id) values " +
-			"(1, 'FileTest num 1', 2, 2)," +
-			"(2, 'FileTest num 2', 1, 3)," +
-			"(3, 'FileTest num 3', 2, 1)," +
-			"(4, 'FileTest num 4', 3, 2)"
+		Caffeine.executeUpdate("insert into downloads (file_file_name, org_id, user_id) values " +
+			"('FileTest num 1', 2, 2)," +
+			"('FileTest num 2', 1, 3)," +
+			"('FileTest num 3', 2, 1)," +
+			"('FileTest num 4', 3, 2)"
 		);
 	}
 }

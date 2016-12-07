@@ -89,7 +89,7 @@ public class CaffeineObject {
 				for (Field f : fields) {
 					String[] nameSplit = f.toString().split("\\.");
 					String simpleName = nameSplit[nameSplit.length - 1];
-					if ( !(ignoredFields.contains(simpleName) || simpleName.startsWith("$")) ) {
+					if ( !(ignoredFields.contains(simpleName) || simpleName.startsWith("$") || simpleName.equals("id")) ) {
 						if (Modifier.isPrivate(f.getModifiers())) { f.setAccessible(true); }
 						args.put(simpleName, f.get(this));
 					}
