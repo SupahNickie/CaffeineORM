@@ -350,29 +350,29 @@ public class CaffeineObject {
 
 	/* Getters */
 
-	public final List<Object> getPlaceholders() throws Exception {
+	final List<Object> getPlaceholders() throws Exception {
 		return this.placeholders;
 	}
 
-	public final String getCurrentQuery() throws Exception {
+	final String getCurrentQuery() throws Exception {
 		return this.currentQuery;
 	}
 
-	public final boolean getFirstCondition() throws Exception {
+	final boolean getFirstCondition() throws Exception {
 		return this.firstCondition;
 	}
 
 	/* Setters */
 
-	public final void setPlaceholders(List<Object> placeholders) throws Exception {
+	final void setPlaceholders(List<Object> placeholders) throws Exception {
 		this.placeholders = placeholders;
 	}
 
-	public final void setCurrentQuery(String sql) throws Exception {
+	final void setCurrentQuery(String sql) throws Exception {
 		this.currentQuery = sql;
 	}
 
-	public final void setFirstCondition(Boolean bool) throws Exception {
+	final void setFirstCondition(Boolean bool) throws Exception {
 		this.firstCondition = bool;
 	}
 

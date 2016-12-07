@@ -193,7 +193,7 @@ public final class Caffeine {
 			CaffeineObject newInstance = (CaffeineObject) getQueryClass().newInstance();
 			for (String column: row.keySet()) {
 				newInstance.setAttr(column, row.get(column));
-		  }
+			}
 			ret.add(newInstance);
 		}
 		teardown(rs, ps);
