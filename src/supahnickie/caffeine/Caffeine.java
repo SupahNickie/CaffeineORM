@@ -1,6 +1,9 @@
 package supahnickie.caffeine;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +16,7 @@ public final class Caffeine {
 	private static String dbPassword;
 	private static Connection connection;
 
-	public static void setConfiguration(String driver, String url, String username, String password) {
+	public static final void setConfiguration(String driver, String url, String username, String password) {
 		dbDriver = driver;
 		dbUrl = url;
 		dbUsername = username;
@@ -37,7 +40,7 @@ public final class Caffeine {
 		try {
 			connection.close();
 			connection = null;
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -49,14 +52,14 @@ public final class Caffeine {
 	}
 
 	@SuppressWarnings("rawtypes")
+	static final Class getQueryClass() { return currentQueryClass; }
+
+	@SuppressWarnings("rawtypes")
 	static final Class setQueryClass(Class klass) {
 		currentQueryClass = klass;
 		return klass;
 	}
 
-	@SuppressWarnings("rawtypes")
-	static final Class getQueryClass() { return currentQueryClass; }
-	
 	/* Delegated to internal SQL Runner class */
 
 	public static final void rawUpdate(String sql) throws Exception { CaffeineSQLRunner.executeUpdate(sql); }

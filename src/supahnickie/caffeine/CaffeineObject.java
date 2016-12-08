@@ -3,8 +3,14 @@ package supahnickie.caffeine;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class CaffeineObject {
 	static List<String> ignoredFields = new ArrayList<String>();
@@ -139,7 +145,7 @@ public class CaffeineObject {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public final List<CaffeineObject> getAssociated(Class associated, String foreignKey) throws Exception, SQLException, ClassNotFoundException {
+	public final List<CaffeineObject> getAssociated(Class associated, String foreignKey) throws Exception {
 		Map<Class, String> associations = (Map<Class, String>) Caffeine.setQueryClass(this.getClass()).getDeclaredField("caffeineAssociations").get(null);
 		String type = associations.get(associated);
 		switch (type) {

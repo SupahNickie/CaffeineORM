@@ -107,7 +107,7 @@ class CaffeineSQLRunner {
 		return executeQuery(ps);
 	}
 
-	static String appendOptions(String sql, Map<String, Object> options) {
+	static final String appendOptions(String sql, Map<String, Object> options) {
 		if ((options != null) && (!options.isEmpty()) ) {
 			sql = sql + " ";
 			if (options.containsKey("groupBy")) { sql = sql + "group by " + options.get("groupBy") + " "; }

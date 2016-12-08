@@ -1,7 +1,9 @@
 package supahnickie.caffeine;
 
-import java.sql.*;
-import java.util.*;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.util.HashMap;
+import java.util.List;
 
 final class Row {
 	HashMap<String, Object> row;
@@ -15,10 +17,10 @@ final class Row {
 	}
 
 	final void add (String column, Object value) {
-		getRow().put(column, value);
+		this.getRow().put(column, value);
 	}
 
-	final static void formTable (ResultSet rs, List<HashMap<String, Object>> table) throws SQLException {
+	final static void formTable (ResultSet rs, List<HashMap<String, Object>> table) throws Exception {
 		if (rs == null) return;
 
 		ResultSetMetaData rsmd = rs.getMetaData();
