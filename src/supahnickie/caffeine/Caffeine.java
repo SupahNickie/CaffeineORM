@@ -13,8 +13,6 @@ public final class Caffeine {
 	private static String dbPassword;
 	private static Connection connection;
 
-	private Caffeine() {}
-	
 	public static void setConfiguration(String driver, String url, String username, String password) {
 		dbDriver = driver;
 		dbUrl = url;

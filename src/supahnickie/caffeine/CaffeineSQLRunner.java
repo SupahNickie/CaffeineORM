@@ -81,7 +81,7 @@ class CaffeineSQLRunner {
 
 	static final List<CaffeineObject> executeQuery(String sql, List<Object> values, Map<String, Object> options) throws Exception {
 		Connection c = Caffeine.setup();
-		if (!(options == null)) { sql = CaffeineObject.appendOptions(sql, options); }
+		if (!(options == null)) { sql = appendOptions(sql, options); }
 		PreparedStatement ps = (sql.contains("$")) ? CaffeineParamReplacer.replaceNamedParameters(c, sql, values) : CaffeineParamReplacer.replaceJDBCParameters(c, sql, values);
 		return executeQuery(ps);
 	}
@@ -97,7 +97,7 @@ class CaffeineSQLRunner {
 			sql = sql + keys.get(i) + " = ?";
 			if ( (args.keySet().size() > 1) && (i != args.keySet().size() - 1) ) { sql = sql + " and "; }
 		}
-		if (!(options == null)) { sql = CaffeineObject.appendOptions(sql, options); }
+		if (!(options == null)) { sql = appendOptions(sql, options); }
 		PreparedStatement ps = Caffeine.setup().prepareStatement(sql);
 		int counter = 1;
 		for (String column : keys) {
@@ -105,5 +105,15 @@ class CaffeineSQLRunner {
 			counter++;
 		}
 		return executeQuery(ps);
+	}
+
+	static String appendOptions(String sql, Map<String, Object> options) {
+		if ((options != null) && (!options.isEmpty()) ) {
+			sql = sql + " ";
+			if (options.containsKey("groupBy")) { sql = sql + "group by " + options.get("groupBy") + " "; }
+			if (options.containsKey("orderBy")) { sql = sql + "order by " + options.get("orderBy") + " "; }
+			if (options.containsKey("limit")) { sql = sql + "limit " + options.get("limit") + " "; }
+		}
+		return sql;
 	}
 }

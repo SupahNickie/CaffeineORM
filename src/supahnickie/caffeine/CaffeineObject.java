@@ -5,14 +5,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.sql.*;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class CaffeineObject {
 	static List<String> ignoredFields = new ArrayList<String>();
-	String currentQuery;
-	boolean firstCondition;
-	List<Object> placeholders = new ArrayList<Object>();
 	protected String validationErrors = "";
 
 	static {
@@ -33,14 +28,14 @@ public class CaffeineObject {
 		Caffeine.setQueryClass(klass);
 	}
 
-	public final static CaffeineObject chainable() {
-		return new CaffeineObject();
+	public final static CaffeineChainable chainable() {
+		return new CaffeineChainable();
 	}
 
 	@SuppressWarnings("rawtypes")
-	public final static CaffeineObject chainable(Class klass) {
+	public final static CaffeineChainable chainable(Class klass) {
 		Caffeine.setQueryClass(klass);
-		return new CaffeineObject();
+		return new CaffeineChainable();
 	}
 
 	/* AR-like CRUD */
@@ -138,73 +133,6 @@ public class CaffeineObject {
 		}
 	}
 
-	/* AR-like querying methods */
-
-	@SuppressWarnings("unchecked")
-	public final List<CaffeineObject> execute() throws Exception {
-		String sql = getCurrentQuery();
-		PreparedStatement ps = Caffeine.setup().prepareStatement(sql);
-		int counter = 1;
-		for (int i = 0; i < getPlaceholders().size(); i++) {
-			if (getPlaceholders().get(i).getClass().equals(ArrayList.class)) {
-				List<Object> arrayArgs = (List<Object>) getPlaceholders().get(i);
-				for (int j = 0; j < arrayArgs.size(); j++) {
-					ps.setObject(counter, arrayArgs.get(j));
-					counter++;
-				}
-			} else {
-				ps.setObject(counter, getPlaceholders().get(i));
-				counter++;
-			}
-		}
-		List<CaffeineObject> results = CaffeineSQLRunner.executeQuery(ps);
-		resetQueryState();
-		return results;
-	}
-
-	public final CaffeineObject join(String typeOfJoin, String fromJoin, String toJoin) throws Exception {
-		String[] fromJoins = fromJoin.split("\\.");
-		String[] toJoins = toJoin.split("\\.");
-		String sql;
-		sql = (getCurrentQuery() == null) ? baseQuery() : getCurrentQuery();
-		typeOfJoin = (typeOfJoin.equals("")) ? "join " : typeOfJoin + " join ";
-		sql = sql + " " + typeOfJoin + toJoins[0] + " on " + toJoins[0] + "." + toJoins[1] + " = " + fromJoins[0] + "." + fromJoins[1];
-		setCurrentQuery(sql);
-		return this;
-	}
-
-	public final CaffeineObject join(String fromJoin, String toJoin) throws Exception { 
-		return join("", fromJoin, toJoin);
-	}
-
-	public final CaffeineObject where(String condition) throws Exception {
-		return appendCondition("and", condition);
-	}
-
-	public final CaffeineObject where(String condition, Object placeholderValue) throws Exception {
-		getPlaceholders().add(placeholderValue);
-		return where(condition);
-	}
-
-	public final CaffeineObject where(String condition, List<Object> placeholderValues) throws Exception {
-		getPlaceholders().add(placeholderValues);
-		return where(condition);
-	}
-
-	public final CaffeineObject or(String condition) throws Exception {
-		return appendCondition("or", condition);
-	}
-
-	public final CaffeineObject or(String condition, Object placeholderValue) throws Exception {
-		getPlaceholders().add(placeholderValue);
-		return or(condition);
-	}
-
-	public final CaffeineObject or(String condition, List<Object> placeholderValues) throws Exception {
-		getPlaceholders().add(placeholderValues);
-		return or(condition);
-	}
-
 	@SuppressWarnings("rawtypes")
 	public final List<CaffeineObject> getAssociated(Class associated) throws Exception {
 		return getAssociated(associated, null);
@@ -276,52 +204,22 @@ public class CaffeineObject {
 		return sql;
 	}
 
-	private final CaffeineObject appendCondition(String type, String condition) throws Exception {
-		if (getCurrentQuery() == null) {
-			setCurrentQuery(baseQuery());
-		}
-		Pattern p = Pattern.compile("where");
-		Matcher m = p.matcher(getCurrentQuery());
-		if ( !m.find() ) setFirstCondition(true);
-		if ( getFirstCondition() ) {
-			setCurrentQuery(getCurrentQuery() + " where ");
-		} else {
-			setCurrentQuery(getCurrentQuery() + type + " ");
-		}
-		setFirstCondition(false);
-		setCurrentQuery(getCurrentQuery() + condition + " ");
-		return this;
-	}
-
-	static String appendOptions(String sql, Map<String, Object> options) {
-		if ((options != null) && (!options.isEmpty()) ) {
-			sql = sql + " ";
-			if (options.containsKey("groupBy")) { sql = sql + "group by " + options.get("groupBy") + " "; }
-			if (options.containsKey("orderBy")) { sql = sql + "order by " + options.get("orderBy") + " "; }
-			if (options.containsKey("limit")) { sql = sql + "limit " + options.get("limit") + " "; }
-		}
-		return sql;
-	}
-
 	/* validationType being either "update" or "create" */
-	public boolean validate(String validationType) {
-		return true;
-	}
 
-	public final String getValidationErrors() throws Exception {
-		return (String) getFieldValue("validationErrors", this);
+	public boolean validate(String validationType) {
+		return false;
 	}
 
 	static final String baseQuery() throws Exception {
-		String tableName = (String) getFieldValue("tableName");
+		String tableName = (String) getFieldValue("tableName", Caffeine.getQueryClass());
 		String sql = "select " + tableName + ".* from " + tableName;
 		return sql;
 	}
 
-	private final void resetQueryState() throws Exception {
-		setPlaceholders(new ArrayList<Object>());
-		setCurrentQuery(null);
-		setFirstCondition(true);
+	/* Getters */
+
+	public final String getValidationErrors() throws Exception {
+		return (String) getFieldValue("validationErrors", this);
 	}
 
 	private static Object getFieldValue(String fieldName) throws Exception {
@@ -346,33 +244,7 @@ public class CaffeineObject {
 		return result;
 	}
 
-	/* Getters */
-
-	final List<Object> getPlaceholders() throws Exception {
-		return this.placeholders;
-	}
-
-	final String getCurrentQuery() throws Exception {
-		return this.currentQuery;
-	}
-
-	final boolean getFirstCondition() throws Exception {
-		return this.firstCondition;
-	}
-
 	/* Setters */
-
-	final void setPlaceholders(List<Object> placeholders) throws Exception {
-		this.placeholders = placeholders;
-	}
-
-	final void setCurrentQuery(String sql) throws Exception {
-		this.currentQuery = sql;
-	}
-
-	final void setFirstCondition(Boolean bool) throws Exception {
-		this.firstCondition = bool;
-	}
 
 	final void setAttrs(ResultSet rs) throws Exception {
 		Field[] fields = Caffeine.getQueryClass().getDeclaredFields();
