@@ -5,10 +5,10 @@ import java.sql.ResultSetMetaData;
 import java.util.HashMap;
 import java.util.List;
 
-final class Row {
+final class CaffeineRow {
 	HashMap<String, Object> row;
 
-	Row() {
+	CaffeineRow() {
 		this.row = new HashMap<String, Object>();
 	}
 
@@ -26,7 +26,7 @@ final class Row {
 		ResultSetMetaData rsmd = rs.getMetaData();
 		int numOfCol = rsmd.getColumnCount();
 		while (rs.next()) {
-			Row row = new Row();
+			CaffeineRow row = new CaffeineRow();
 			for (int i = 1; i <= numOfCol; i++) {
 				row.add(rsmd.getColumnName(i), rs.getObject(i));
 			}

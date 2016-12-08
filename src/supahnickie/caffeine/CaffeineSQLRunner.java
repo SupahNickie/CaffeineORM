@@ -63,7 +63,7 @@ class CaffeineSQLRunner {
 		List<CaffeineObject> ret = new ArrayList<CaffeineObject>();
 		List<HashMap<String, Object>> table = new ArrayList<HashMap<String, Object>>();
 		ResultSet rs = ps.executeQuery();
-		Row.formTable(rs, table);
+		CaffeineRow.formTable(rs, table);
 		for (HashMap<String, Object> row : table) {
 			CaffeineObject newInstance = (CaffeineObject) Caffeine.getQueryClass().newInstance();
 			for (String column: row.keySet()) {
