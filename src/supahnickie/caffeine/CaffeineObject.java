@@ -13,7 +13,7 @@ public class CaffeineObject {
 	String currentQuery;
 	boolean firstCondition;
 	List<Object> placeholders = new ArrayList<Object>();
-	public String validationErrors = "";
+	protected String validationErrors = "";
 
 	static {
 		ignoredFields.add("tableName");
@@ -86,12 +86,12 @@ public class CaffeineObject {
 				Caffeine.setQueryClass(this.getClass());
 				Map<String, Object> args = new HashMap<String, Object>();
 				Field[] fields = Caffeine.getQueryClass().getDeclaredFields();
-				for (Field f : fields) {
-					String[] nameSplit = f.toString().split("\\.");
+				for (Field field : fields) {
+					String[] nameSplit = field.toString().split("\\.");
 					String simpleName = nameSplit[nameSplit.length - 1];
 					if ( !(ignoredFields.contains(simpleName) || simpleName.startsWith("$") || simpleName.equals("id")) ) {
-						if (Modifier.isPrivate(f.getModifiers())) { f.setAccessible(true); }
-						args.put(simpleName, f.get(this));
+						if (Modifier.isPrivate(field.getModifiers())) { field.setAccessible(true); }
+						args.put(simpleName, field.get(this));
 					}
 				}
 				Object[] argKeys = args.keySet().toArray();
@@ -127,11 +127,8 @@ public class CaffeineObject {
 	public final boolean delete() {
 		try {
 			Caffeine.setQueryClass(this.getClass());
-			Field tableNameField = Caffeine.getQueryClass().getDeclaredField("tableName");
-			Field field = Caffeine.getQueryClass().getDeclaredField("id");
-			String tableName = (String) tableNameField.get(null);
-			field.setAccessible(true);
-			int id = field.getInt(this);
+			String tableName = (String) getFieldValue("tableName");
+			int id = (int) getFieldValue("id", this);
 			String sql = "delete from " + tableName + " where id = " + id;
 			Caffeine.executeUpdate(sql);
 			return true;
@@ -169,16 +166,8 @@ public class CaffeineObject {
 		String[] fromJoins = fromJoin.split("\\.");
 		String[] toJoins = toJoin.split("\\.");
 		String sql;
-		if (getCurrentQuery() == null) {
-			sql = baseQuery();
-		} else {
-			sql = getCurrentQuery();
-		}
-		if (typeOfJoin.equals("")) {
-			typeOfJoin = "join ";
-		} else {
-			typeOfJoin = typeOfJoin + " join ";
-		}
+		sql = (getCurrentQuery() == null) ? baseQuery() : getCurrentQuery();
+		typeOfJoin = (typeOfJoin.equals("")) ? "join " : typeOfJoin + " join ";
 		sql = sql + " " + typeOfJoin + toJoins[0] + " on " + toJoins[0] + "." + toJoins[1] + " = " + fromJoins[0] + "." + fromJoins[1];
 		setCurrentQuery(sql);
 		return this;
@@ -238,13 +227,9 @@ public class CaffeineObject {
 
 	@SuppressWarnings("rawtypes")
 	private final List<CaffeineObject> getHasMany(Class associated, String foreignKey) throws Exception {
-		Field tableNameField = Caffeine.getQueryClass().getDeclaredField("tableName");
-		Field associatedTableNameField = associated.getDeclaredField("tableName");
-		Field field = Caffeine.getQueryClass().getDeclaredField("id");
-		String tableName = (String) tableNameField.get(null);
-		String associatedTableName = (String) associatedTableNameField.get(null);
-		field.setAccessible(true);
-		int id = field.getInt(this);
+		String tableName = (String) getFieldValue("tableName");
+		String associatedTableName = (String) getFieldValue("tableName", associated);
+		int id = (int) getFieldValue("id", this);
 		String foreignLookup = (foreignKey == null) ? tableName.substring(0, tableName.length() - 1) + "_id" : foreignKey;
 		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where " + foreignLookup + " = " + id;
 		Caffeine.setQueryClass(associated);
@@ -253,11 +238,9 @@ public class CaffeineObject {
 
 	@SuppressWarnings("rawtypes")
 	private final List<CaffeineObject> getBelongsTo(Class associated, String foreignKey) throws Exception {
-		Field associatedTableNameField = associated.getDeclaredField("tableName");
-		String associatedTableName = (String) associatedTableNameField.get(null);
-		Field field = (foreignKey == null) ? Caffeine.getQueryClass().getDeclaredField(associatedTableName.substring(0, associatedTableName.length() -1) + "_id") : Caffeine.getQueryClass().getDeclaredField(foreignKey);
-		field.setAccessible(true);
-		int id = field.getInt(this);
+		String associatedTableName = (String) getFieldValue("tableName", associated);
+		String foreignLookup = (foreignKey == null) ? associatedTableName.substring(0, associatedTableName.length() -1) + "_id" : foreignKey;
+		int id = (int) getFieldValue(foreignLookup, this);
 		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where id = " + id;
 		Caffeine.setQueryClass(associated);
 		return Caffeine.executeQuery(sql);
@@ -266,8 +249,7 @@ public class CaffeineObject {
 	/* Helper methods */
 
 	private final static String insertInsertPlaceholders(Map<String, Object> args, Object[] argKeys) throws Exception {
-		Field tableNameField = Caffeine.getQueryClass().getDeclaredField("tableName");
-		String tableName = (String) tableNameField.get(null);
+		String tableName = (String) getFieldValue("tableName");
 		String sql = "insert into " + tableName + " (";
 		for (int i = 0; i < argKeys.length; i++) {
 			sql = sql + argKeys[i];
@@ -283,11 +265,8 @@ public class CaffeineObject {
 	}
 
 	private final String insertUpdatePlaceholders(Map<String, Object> args, Object[] argKeys) throws Exception {
-		Field tableNameField = Caffeine.getQueryClass().getDeclaredField("tableName");
-		Field field = Caffeine.getQueryClass().getDeclaredField("id");
-		String tableName = (String) tableNameField.get(null);
-		field.setAccessible(true);
-		int id = field.getInt(this);
+		String tableName = (String) getFieldValue("tableName");
+		int id = (int) getFieldValue("id", this);
 		String sql = "update " + tableName + " set ";
 		for (int i = 0; i < argKeys.length; i++) {
 			sql = sql + argKeys[i] + " = ?";
@@ -330,14 +309,11 @@ public class CaffeineObject {
 	}
 
 	public final String getValidationErrors() throws Exception {
-		Field field = Caffeine.getQueryClass().getDeclaredField("validationErrors");
-		String errors = (String) field.get(this);
-		return errors;
+		return (String) getFieldValue("validationErrors", this);
 	}
 
 	static final String baseQuery() throws Exception {
-		Field field = Caffeine.getQueryClass().getDeclaredField("tableName");
-		String tableName = (String) field.get(null);
+		String tableName = (String) getFieldValue("tableName");
 		String sql = "select " + tableName + ".* from " + tableName;
 		return sql;
 	}
@@ -346,6 +322,28 @@ public class CaffeineObject {
 		setPlaceholders(new ArrayList<Object>());
 		setCurrentQuery(null);
 		setFirstCondition(true);
+	}
+
+	private static Object getFieldValue(String fieldName) throws Exception {
+		return getFieldValue(fieldName, null, null);
+	}
+
+	private static Object getFieldValue(String fieldName, CaffeineObject instance) throws Exception {
+		return getFieldValue(fieldName, instance, null);
+	}
+
+	@SuppressWarnings("rawtypes")
+	private static Object getFieldValue(String fieldName, Class klassToUse) throws Exception {
+		return getFieldValue(fieldName, null, klassToUse);
+	}
+
+	@SuppressWarnings("rawtypes")
+	private static Object getFieldValue(String fieldName, CaffeineObject instance, Class klassToUse) throws Exception {
+		Class klass = (klassToUse == null) ? Caffeine.getQueryClass() : klassToUse;
+		Field field = klass.getDeclaredField(fieldName);
+		field.setAccessible(true);
+		Object result = field.get(instance);
+		return result;
 	}
 
 	/* Getters */
@@ -378,11 +376,11 @@ public class CaffeineObject {
 
 	final void setAttrs(ResultSet rs) throws Exception {
 		Field[] fields = Caffeine.getQueryClass().getDeclaredFields();
-		for (Field f : fields) {
+		for (Field field : fields) {
 			try {
-				String[] attrIdentifier = f.toString().split("\\.");
-				f.setAccessible(true);
-				f.set(this, rs.getObject(attrIdentifier[attrIdentifier.length - 1]));
+				String[] attrIdentifier = field.toString().split("\\.");
+				field.setAccessible(true);
+				field.set(this, rs.getObject(attrIdentifier[attrIdentifier.length - 1]));
 			} catch (Exception e){
 				// Do nothing
 			}

@@ -8,7 +8,7 @@ import java.util.Map;
 public class User extends CaffeineObject {
 
 	/* Caffeine utilities */
-	public static final String tableName = "users";
+	static final String tableName = "users";
 
 	// Associations
 	@SuppressWarnings("rawtypes")

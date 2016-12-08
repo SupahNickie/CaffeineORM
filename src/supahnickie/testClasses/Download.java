@@ -8,7 +8,7 @@ import java.util.Map;
 public class Download extends CaffeineObject {
 
 	/* Caffeine utilities */
-	public static final String tableName = "downloads";
+	static final String tableName = "downloads";
 
 	// Associations
 	@SuppressWarnings("rawtypes")
