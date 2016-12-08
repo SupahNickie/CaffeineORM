@@ -5,28 +5,20 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 class CaffeineSQLRunner {
+	/* Insert, Update, Delete statements */
+
 	static final void executeUpdate(Connection c, PreparedStatement ps) throws Exception {
 		ps.executeUpdate();
 		c.commit();
 		c.close();
 		ps.close();
 		Caffeine.teardown();
-	}
-
-	public static final void executeUpdate(String sql) throws Exception {
-		Connection c = Caffeine.setup();
-		executeUpdate(c, c.prepareStatement(sql));
-	}
-
-	public static final void executeUpdate(String sql, List<Object> values) throws Exception {
-		Connection c = Caffeine.setup();
-		PreparedStatement ps = (sql.contains("$")) ? CaffeineParamReplacer.replaceNamedParameters(c, sql, values) : CaffeineParamReplacer.replaceJDBCParameters(c, sql, values);
-		executeUpdate(c, ps);
 	}
 
 	static final CaffeineObject executeUpdate(Connection c, PreparedStatement ps, CaffeineObject instance) throws Exception {
@@ -37,6 +29,21 @@ class CaffeineSQLRunner {
 		ps.close();
 		Caffeine.teardown();
 		return instance;
+	}
+
+	static final void executeUpdate(String sql) throws Exception {
+		Connection c = Caffeine.setup();
+		executeUpdate(c, c.prepareStatement(sql));
+	}
+
+	static final void executeUpdate(String sql, List<Object> values) throws Exception {
+		Connection c = Caffeine.setup();
+		PreparedStatement ps = (sql.contains("$")) ? CaffeineParamReplacer.replaceNamedParameters(c, sql, values) : CaffeineParamReplacer.replaceJDBCParameters(c, sql, values);
+		executeUpdate(c, ps);
+	}
+
+	static final void executeUpdate(String sql, Object... args) throws Exception {
+		executeUpdate(sql, Arrays.asList(args));
 	}
 
 	static final CaffeineObject executeUpdate(String sql, Map<String, Object> args, Object[] argKeys, CaffeineObject instance) throws Exception {
@@ -68,18 +75,22 @@ class CaffeineSQLRunner {
 		return ret;
 	}
 
-	public static final List<CaffeineObject> executeQuery(String sql) throws Exception {
+	static final List<CaffeineObject> executeQuery(String sql) throws Exception {
 		return executeQuery(Caffeine.setup().prepareStatement(sql));
 	}
 
-	public static final List<CaffeineObject> executeQuery(String sql, List<Object> values, Map<String, Object> options) throws Exception {
+	static final List<CaffeineObject> executeQuery(String sql, List<Object> values, Map<String, Object> options) throws Exception {
 		Connection c = Caffeine.setup();
 		if (!(options == null)) { sql = CaffeineObject.appendOptions(sql, options); }
 		PreparedStatement ps = (sql.contains("$")) ? CaffeineParamReplacer.replaceNamedParameters(c, sql, values) : CaffeineParamReplacer.replaceJDBCParameters(c, sql, values);
 		return executeQuery(ps);
 	}
 
-	public static final List<CaffeineObject> executeQuery(Map<String, Object> args, Map<String, Object> options) throws Exception {
+	static final List<CaffeineObject> executeQuery(String sql, Object... args) throws Exception {
+		return executeQuery(sql, Arrays.asList(args), null);
+	}
+
+	static final List<CaffeineObject> executeQuery(Map<String, Object> args, Map<String, Object> options) throws Exception {
 		String sql = CaffeineObject.baseQuery() + " where ";
 		List<String> keys = new ArrayList<>(args.keySet());
 		for (int i = 0; i < keys.size(); i++) {

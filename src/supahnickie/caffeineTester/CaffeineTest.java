@@ -14,11 +14,11 @@ import supahnickie.testClasses.*;
 public class CaffeineTest {
 
 	@Test
-	public void executeUpdateWithNamedParameters() throws Exception {
+	public void rawUpdateWithNamedParameters() throws Exception {
 		List<Object> args = new ArrayList<Object>();
 		args.add(6);
 		args.add("McPhee");
-		Caffeine.executeUpdate("insert into users (first_name, id, sign_in_count) values ($2, $1, $1)", args);
+		Caffeine.rawUpdate("insert into users (first_name, id, sign_in_count) values ($2, $1, $1)", args);
 		User user = (User) CaffeineObject.find(User.class, 6);
 		assertEquals("id should match $1 arg", 6, user.getId());
 		assertEquals("sign_in_count should match $1 arg", 6, user.getSignInCount());
@@ -26,10 +26,19 @@ public class CaffeineTest {
 	}
 
 	@Test
-	public void executeUpdate() throws Exception {
-		Caffeine.executeUpdate("insert into downloads (id, org_id, file_file_name) values (15, 1, 'download1'), (16, 1, 'download2')");
+	public void rawUpdateWithUnstructuredNamedParameters() throws Exception {
+		Caffeine.rawUpdate("insert into users (first_name, id, sign_in_count) values ($2, $1, $1)", 6, "McPhee");
+		User user = (User) CaffeineObject.find(User.class, 6);
+		assertEquals("id should match $1 arg", 6, user.getId());
+		assertEquals("sign_in_count should match $1 arg", 6, user.getSignInCount());
+		assertEquals("first_name should match $2 arg", "McPhee", user.getFirstName());
+	}
+
+	@Test
+	public void rawUpdate() throws Exception {
+		Caffeine.rawUpdate("insert into downloads (id, org_id, file_file_name) values (15, 1, 'download1'), (16, 1, 'download2')");
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = Caffeine.executeQuery("select * from downloads where id in (15, 16)");
+		List<CaffeineObject> downloads = Caffeine.rawQuery("select * from downloads where id in (15, 16)");
 		Download download15 = (Download) downloads.get(0);
 		Download download16 = (Download) downloads.get(1);
 		assertArrayEquals("returned downloads should match expected ids", new int[] {15, 16}, new int[] {download15.id, download16.id});
@@ -38,7 +47,7 @@ public class CaffeineTest {
 	}
 
 	@Test
-	public void executeUpdateWithListArgs() throws Exception {
+	public void rawUpdateWithListArgs() throws Exception {
 		Download download = (Download) CaffeineObject.find(Download.class, 1);
 		assertEquals("file_file_name should match seed before transformation", "FileTest num 1", download.file_file_name);
 		assertEquals("org_id should match seed before transformation", 2, download.org_id);
@@ -46,16 +55,16 @@ public class CaffeineTest {
 		args.add("RenamedFile");
 		args.add(3);
 		args.add(1);
-		Caffeine.executeUpdate("update downloads set (file_file_name, org_id) = (?, ?) where id = ?", args);
+		Caffeine.rawUpdate("update downloads set (file_file_name, org_id) = (?, ?) where id = ?", args);
 		download = (Download) CaffeineObject.find(Download.class, 1);
 		assertEquals("file_file_name should be changed to reflect the update", "RenamedFile", download.file_file_name);
 		assertEquals("org_id should should be changed to reflect the update", 3, download.org_id);
 	}
 
 	@Test
-	public void executeQuery() throws Exception {
+	public void rawQuery() throws Exception {
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = Caffeine.executeQuery("select * from downloads");
+		List<CaffeineObject> downloads = Caffeine.rawQuery("select * from downloads");
 		assertEquals("size of return array should match seeds", 4, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -66,12 +75,12 @@ public class CaffeineTest {
 	}
 
 	@Test
-	public void executeQueryWithNamedParamsAndListArgs() throws Exception {
+	public void rawQueryWithNamedParamsAndListArgs() throws Exception {
 		List<Object> args = new ArrayList<Object>();
 		args.add("FileTest num 2");
 		args.add(2);
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = Caffeine.executeQuery("select * from downloads where file_file_name = $1 or org_id = $2 order by id asc", args);
+		List<CaffeineObject> downloads = Caffeine.rawQuery("select * from downloads where file_file_name = $1 or org_id = $2 order by id asc", args);
 		assertEquals("size of return array should match expected return", 3, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -82,7 +91,20 @@ public class CaffeineTest {
 	}
 
 	@Test
-	public void executeQueryWithNamedParamsAndInStatement() throws Exception {
+	public void rawQueryWithNamedParamsAndUnstructuredArgs() throws Exception {
+		CaffeineObject.setQueryClass(Download.class);
+		List<CaffeineObject> downloads = Caffeine.rawQuery("select * from downloads where file_file_name = $1 or org_id = $2 order by id asc", "FileTest num 2", 2);
+		assertEquals("size of return array should match expected return", 3, downloads.size());
+		Download download1 = (Download) downloads.get(0);
+		Download download2 = (Download) downloads.get(1);
+		assertEquals("download1 file name should match seed", "FileTest num 1", download1.file_file_name);
+		assertEquals("download1 org_id should match seed", 2, download1.org_id);
+		assertEquals("download2 file name should match seed", "FileTest num 2", download2.file_file_name);
+		assertEquals("download2 org_id should match seed", 1, download2.org_id);
+	}
+
+	@Test
+	public void rawQueryWithNamedParamsAndInStatement() throws Exception {
 		List<Object> args = new ArrayList<Object>();
 		List<Integer> orgIdArg = new ArrayList<Integer>();
 		List<String> filenameArg = new ArrayList<String>();
@@ -94,7 +116,7 @@ public class CaffeineTest {
 		args.add(orgIdArg);
 		args.add(filenameArg);
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = Caffeine.executeQuery("select * from downloads where org_id in ($1) or file_file_name in ($2) order by id asc", args);
+		List<CaffeineObject> downloads = Caffeine.rawQuery("select * from downloads where org_id in ($1) or file_file_name in ($2) order by id asc", args);
 		assertEquals("size of return array should match expected return", 3, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -108,12 +130,35 @@ public class CaffeineTest {
 	}
 
 	@Test
-	public void executeQueryWithListArgs() throws Exception {
+	public void rawQueryWithUnstructuredNamedParamsAndInStatement() throws Exception {
+		List<Integer> orgIdArg = new ArrayList<Integer>();
+		List<String> filenameArg = new ArrayList<String>();
+		orgIdArg.add(1);
+		orgIdArg.add(3);
+		filenameArg.add("FileTest num 4");
+		filenameArg.add("FileTest num 1");
+		filenameArg.add("FileTest num 2");
+		CaffeineObject.setQueryClass(Download.class);
+		List<CaffeineObject> downloads = Caffeine.rawQuery("select * from downloads where org_id in ($1) or file_file_name in ($2) or id = $3 order by id asc", orgIdArg, filenameArg, 2);
+		assertEquals("size of return array should match expected return", 3, downloads.size());
+		Download download1 = (Download) downloads.get(0);
+		Download download2 = (Download) downloads.get(1);
+		Download download3 = (Download) downloads.get(2);
+		assertEquals("download1 file name should match seed", "FileTest num 1", download1.file_file_name);
+		assertEquals("download1 org_id should match seed", 2, download1.org_id);
+		assertEquals("download2 file name should match seed", "FileTest num 2", download2.file_file_name);
+		assertEquals("download2 org_id should match seed", 1, download2.org_id);
+		assertEquals("download3 file name should match seed", "FileTest num 4", download3.file_file_name);
+		assertEquals("download3 org_id should match seed", 3, download3.org_id);
+	}
+
+	@Test
+	public void rawQueryWithListArgs() throws Exception {
 		List<Object> args = new ArrayList<Object>();
 		args.add("FileTest num 2");
 		args.add(2);
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = Caffeine.executeQuery("select * from downloads where file_file_name = ? or org_id = ? order by id asc", args);
+		List<CaffeineObject> downloads = Caffeine.rawQuery("select * from downloads where file_file_name = ? or org_id = ? order by id asc", args);
 		assertEquals("size of return array should match expected return", 3, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -124,7 +169,20 @@ public class CaffeineTest {
 	}
 
 	@Test
-	public void executeQueryWithListArgsAndJDBCInPlaceholder() throws Exception {
+	public void rawQueryWithUnstructuredListArgs() throws Exception {
+		CaffeineObject.setQueryClass(Download.class);
+		List<CaffeineObject> downloads = Caffeine.rawQuery("select * from downloads where file_file_name = ? or org_id = ? order by id asc", "FileTest num 2", 2);
+		assertEquals("size of return array should match expected return", 3, downloads.size());
+		Download download1 = (Download) downloads.get(0);
+		Download download2 = (Download) downloads.get(1);
+		assertEquals("download1 file name should match seed", "FileTest num 1", download1.file_file_name);
+		assertEquals("download1 org_id should match seed", 2, download1.org_id);
+		assertEquals("download2 file name should match seed", "FileTest num 2", download2.file_file_name);
+		assertEquals("download2 org_id should match seed", 1, download2.org_id);
+	}
+
+	@Test
+	public void rawQueryWithListArgsAndJDBCInPlaceholder() throws Exception {
 		List<Object> args = new ArrayList<Object>();
 		args.add("FileTest num 2");
 		List<Integer> arrayArg = new LinkedList<Integer>();
@@ -138,7 +196,7 @@ public class CaffeineTest {
 		otherArrayArg.add(6);
 		args.add(otherArrayArg);
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = Caffeine.executeQuery("select * from downloads where file_file_name = ? or id in (?) or org_id in (?) order by id asc", args);
+		List<CaffeineObject> downloads = Caffeine.rawQuery("select * from downloads where file_file_name = ? or id in (?) or org_id in (?) order by id asc", args);
 		assertEquals("size of return array should match expected return", 3, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -152,7 +210,31 @@ public class CaffeineTest {
 	}
 
 	@Test
-	public void executeQueryWithListArgsAndOptions() throws Exception {
+	public void rawQueryWithUnstructuredListArgsAndJDBCInPlaceholder() throws Exception {
+		List<Integer> arrayArg = new LinkedList<Integer>();
+		arrayArg.add(2);
+		arrayArg.add(3);
+		arrayArg.add(4);
+		arrayArg.add(5);
+		List<Integer> otherArrayArg = new LinkedList<Integer>();
+		otherArrayArg.add(1);
+		otherArrayArg.add(6);
+		CaffeineObject.setQueryClass(Download.class);
+		List<CaffeineObject> downloads = Caffeine.rawQuery("select * from downloads where file_file_name = ? or id in (?) or org_id in (?) order by id asc", "FileTest num 2", arrayArg, otherArrayArg);
+		assertEquals("size of return array should match expected return", 3, downloads.size());
+		Download download1 = (Download) downloads.get(0);
+		Download download2 = (Download) downloads.get(1);
+		Download download3 = (Download) downloads.get(2);
+		assertEquals("download1 file name should match seed", "FileTest num 2", download1.file_file_name);
+		assertEquals("download1 id should match seed", 2, download1.id);
+		assertEquals("download2 file name should match seed", "FileTest num 3", download2.file_file_name);
+		assertEquals("download2 id should match seed", 3, download2.id);
+		assertEquals("download3 file name should match seed", "FileTest num 4", download3.file_file_name);
+		assertEquals("download3 id should match seed", 4, download3.id);
+	}
+
+	@Test
+	public void rawQueryWithListArgsAndOptions() throws Exception {
 		List<Object> args = new ArrayList<Object>();
 		args.add("FileTest num 3");
 		args.add(6);
@@ -160,7 +242,7 @@ public class CaffeineTest {
 		options.put("limit", 1);
 		options.put("orderBy", "id asc");
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = Caffeine.executeQuery("select * from downloads where file_file_name = ? or org_id = ?", args, options);
+		List<CaffeineObject> downloads = Caffeine.rawQuery("select * from downloads where file_file_name = ? or org_id = ?", args, options);
 		assertEquals("size of return array should match expected return", 1, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		assertEquals("download1 file name should match seed", "FileTest num 3", download1.file_file_name);
@@ -173,7 +255,7 @@ public class CaffeineTest {
 		args.put("file_file_name", "FileTest num 4");
 		args.put("org_id", 3);
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = Caffeine.executeQuery(args);
+		List<CaffeineObject> downloads = Caffeine.query(args);
 		assertEquals("size of return array should match expected return", 1, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		assertEquals("download1 file name should match seed", "FileTest num 4", download1.file_file_name);
@@ -189,7 +271,7 @@ public class CaffeineTest {
 		options.put("limit", 1);
 		options.put("orderBy", "id asc");
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = Caffeine.executeQuery(args, options);
+		List<CaffeineObject> downloads = Caffeine.query(args, options);
 		assertEquals("size of return array should match expected return", 1, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		assertEquals("download1 file name should match seed", "FileTest num 3", download1.file_file_name);
@@ -205,7 +287,7 @@ public class CaffeineTest {
 		options.put("limit", 1);
 		options.put("orderBy", "id asc");
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = Caffeine.executeQuery(args, options);
+		List<CaffeineObject> downloads = Caffeine.query(args, options);
 		assertEquals("size of return array should match expected return", 0, downloads.size());
 	}
 
@@ -287,7 +369,7 @@ public class CaffeineTest {
 		User dbUser = (User) CaffeineObject.find(User.class, 7);
 		assertArrayEquals("no user should have been updated or created", new Object[] {0, null, null}, new Object[] {dbUser.getId(), dbUser.getFirstName(), dbUser.getLastName()});
 		CaffeineObject.setQueryClass(User.class);
-		List<CaffeineObject> users = Caffeine.executeQuery("select * from users");
+		List<CaffeineObject> users = Caffeine.rawQuery("select * from users");
 		assertEquals("size of return should match expected", 3, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
@@ -302,7 +384,7 @@ public class CaffeineTest {
 		boolean result = user.delete();
 		assertEquals("return should be whether or not object was deleted", true, result);
 		CaffeineObject.setQueryClass(User.class);
-		List<CaffeineObject> users = Caffeine.executeQuery("select * from users");
+		List<CaffeineObject> users = Caffeine.rawQuery("select * from users");
 		assertEquals("size of return should match expected", 2, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
@@ -316,7 +398,7 @@ public class CaffeineTest {
 		boolean result = user.delete();
 		assertEquals("return true if sql ran without error", true, result);
 		CaffeineObject.setQueryClass(User.class);
-		List<CaffeineObject> users = Caffeine.executeQuery("select * from users");
+		List<CaffeineObject> users = Caffeine.rawQuery("select * from users");
 		assertEquals("size of return should match expected", 3, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
@@ -386,7 +468,7 @@ public class CaffeineTest {
 		List<Object> args = new ArrayList<Object>();
 		args.add(2);
 		args.add(3);
-		List<CaffeineObject> users = CaffeineObject.chainable().where("id in (?, ?)", args).execute();
+		List<CaffeineObject> users = CaffeineObject.chainable(User.class).where("id in (?, ?)", args).execute();
 		assertEquals("size of return list should match expected", 2, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
@@ -498,14 +580,14 @@ public class CaffeineTest {
 
 	@After
 	public void tearDown() throws Exception {
-		Caffeine.executeUpdate("drop table if exists users");
-		Caffeine.executeUpdate("drop table if exists downloads");
+		Caffeine.rawUpdate("drop table if exists users");
+		Caffeine.rawUpdate("drop table if exists downloads");
 	}
 
 	public void insertTables() throws Exception {
-		Caffeine.executeUpdate("drop table if exists users");
-		Caffeine.executeUpdate("drop table if exists downloads");
-		Caffeine.executeUpdate("create table if not exists users (" +
+		Caffeine.rawUpdate("drop table if exists users");
+		Caffeine.rawUpdate("drop table if exists downloads");
+		Caffeine.rawUpdate("create table if not exists users (" +
 			"id serial primary key, " +
 			"first_name varchar(255), " +
 			"last_name varchar(255), " +
@@ -513,7 +595,7 @@ public class CaffeineTest {
 			"sign_in_count integer, " +
 			"role varchar(255))"
 		);
-		Caffeine.executeUpdate("create table if not exists downloads (" +
+		Caffeine.rawUpdate("create table if not exists downloads (" +
 			"id serial primary key, " +
 			"file_file_name varchar(255), " +
 			"org_id integer, " +
@@ -522,7 +604,7 @@ public class CaffeineTest {
 	}
 
 	private void insertUsers() throws Exception {
-		Caffeine.executeUpdate("insert into users (first_name, last_name, encrypted_password, sign_in_count, role) values " +
+		Caffeine.rawUpdate("insert into users (first_name, last_name, encrypted_password, sign_in_count, role) values " +
 			"('Grawr', 'McPhee', 'qwerqwer', 13, 'admin')," +
 			"('Nick', 'Case', 'asdfasdf', 0, 'super')," +
 			"('Test', 'User', 'zxcvzxcv', 3, 'moderator')"
@@ -530,7 +612,7 @@ public class CaffeineTest {
 	}
 
 	private void insertDownloads() throws Exception {
-		Caffeine.executeUpdate("insert into downloads (file_file_name, org_id, user_id) values " +
+		Caffeine.rawUpdate("insert into downloads (file_file_name, org_id, user_id) values " +
 			"('FileTest num 1', 2, 2)," +
 			"('FileTest num 2', 1, 3)," +
 			"('FileTest num 3', 2, 1)," +

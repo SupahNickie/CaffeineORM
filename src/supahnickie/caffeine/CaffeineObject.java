@@ -67,7 +67,7 @@ public class CaffeineObject {
 				Caffeine.setQueryClass(klass);
 				Object[] argKeys = args.keySet().toArray();
 				String sql = insertInsertPlaceholders(args, argKeys);
-				return Caffeine.executeUpdate(sql, args, argKeys, (CaffeineObject) klass.newInstance());
+				return CaffeineSQLRunner.executeUpdate(sql, args, argKeys, (CaffeineObject) klass.newInstance());
 			} else {
 				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
 				return null;
@@ -96,7 +96,7 @@ public class CaffeineObject {
 				}
 				Object[] argKeys = args.keySet().toArray();
 				String sql = insertInsertPlaceholders(args, argKeys);
-				return Caffeine.executeUpdate(sql, args, argKeys, this);
+				return CaffeineSQLRunner.executeUpdate(sql, args, argKeys, this);
 			} else {
 				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
 				return null;
@@ -113,7 +113,7 @@ public class CaffeineObject {
 				Caffeine.setQueryClass(this.getClass());
 				Object[] argKeys = args.keySet().toArray();
 				String sql = insertUpdatePlaceholders(args, argKeys);
-				return Caffeine.executeUpdate(sql, args, argKeys, this);
+				return CaffeineSQLRunner.executeUpdate(sql, args, argKeys, this);
 			} else {
 				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
 				return null;
@@ -130,7 +130,7 @@ public class CaffeineObject {
 			String tableName = (String) getFieldValue("tableName");
 			int id = (int) getFieldValue("id", this);
 			String sql = "delete from " + tableName + " where id = " + id;
-			Caffeine.executeUpdate(sql);
+			CaffeineSQLRunner.executeUpdate(sql);
 			return true;
 		} catch (Exception e) {
 			System.out.println(e);
@@ -157,7 +157,7 @@ public class CaffeineObject {
 				counter++;
 			}
 		}
-		List<CaffeineObject> results = Caffeine.executeQuery(ps);
+		List<CaffeineObject> results = CaffeineSQLRunner.executeQuery(ps);
 		resetQueryState();
 		return results;
 	}
@@ -233,7 +233,7 @@ public class CaffeineObject {
 		String foreignLookup = (foreignKey == null) ? tableName.substring(0, tableName.length() - 1) + "_id" : foreignKey;
 		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where " + foreignLookup + " = " + id;
 		Caffeine.setQueryClass(associated);
-		return Caffeine.executeQuery(sql);
+		return CaffeineSQLRunner.executeQuery(sql);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -243,7 +243,7 @@ public class CaffeineObject {
 		int id = (int) getFieldValue(foreignLookup, this);
 		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where id = " + id;
 		Caffeine.setQueryClass(associated);
-		return Caffeine.executeQuery(sql);
+		return CaffeineSQLRunner.executeQuery(sql);
 	}
 
 	/* Helper methods */

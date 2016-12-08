@@ -55,7 +55,7 @@ List<CaffeineObject> multipleJoins = CaffeineObject.chainable(User.class).join("
 Raw SQL with immediate execution. The Caffeine type can be invoked statically but must be told what class objects to return.
 ```
 CaffeineObject.setQueryClass(User.class);
-List<CaffeineObject> admins = Caffeine.executeQuery("select * from users where role = 'super' limit 3");
+List<CaffeineObject> admins = Caffeine.rawQuery("select * from users where role = 'super' limit 3");
 ```
 
 SQL fragment with placeholder values, List of arguments, and additional options. As with any lookup in Caffeine, it must be told what class of objects to return. `IN` syntax is also supported.
@@ -72,11 +72,11 @@ Map<String, Object> optionsMap = new HashMap<String, Object>();
 optionsMap.put("limit", 5);
 optionsMap.put("orderBy", "created_at desc");
 CaffeineObject.setQueryClass(User.class);
-List<CaffeineObject> smithUsers = Caffeine.executeQuery("select * from users where last_name ilike ? or first_name ilike ? or id in (?)", list, optionsMap);
+List<CaffeineObject> smithUsers = Caffeine.rawQuery("select * from users where last_name ilike ? or first_name ilike ? or id in (?)", list, optionsMap);
 // select * from users where last_name ilike 'Smith' or first_name ilike 'Bruce' or id in ( 2, 3, 6 ) order by created_at desc limit 5
 ```
 
-PostgreSQL style named parameters can be used as well with a list of arguments for either DB updates or selects. `IN` syntax is also supported.
+PostgreSQL style named parameters can be used as well with a list or n number of arguments for either DB updates or selects. `IN` syntax is also supported.
 ```
 List<Object> list = new ArrayList<Object>();
 list.add(5);
@@ -87,13 +87,25 @@ names.add("Bunyan");
 names.add("The Third");
 list.add(names);
 Caffeine.setQueryClass(User.class);
-List<CaffeineObject> users = Caffeine.executeQuery("select * from users where id = $1 or id = $2 or first_name in ($3) and sign_in_count > $2", list);
+List<CaffeineObject> users = Caffeine.rawQuery("select * from users where id = $1 or id = $2 or first_name in ($3) and sign_in_count > $2", list);
+// select * from users where id = 5 or id = 8 or first_name in ('Paul', 'Bunyan', 'The Third') and sign_in_count > 8
+
+List<String> names = new ArrayList<String>();
+names.add("Paul");
+names.add("Bunyan");
+names.add("The Third");
+list.add(names);
+Caffeine.setQueryClass(User.class);
+List<CaffeineObject> users = Caffeine.rawQuery("select * from users where id = $1 or id = $2 or first_name in ($3) and sign_in_count > $2", 5, 8, names);
 // select * from users where id = 5 or id = 8 or first_name in ('Paul', 'Bunyan', 'The Third') and sign_in_count > 8
 
 List<Object> list = new ArrayList<Object>();
 list.add("Grawr");
 list.add(3);
-Caffeine.executeUpdate("insert into users set (favorite_number, sign_in_count, first_name, a_number_between_2_and_4) values ($2, $2, $1, $2);
+Caffeine.rawUpdate("insert into users set (favorite_number, sign_in_count, first_name, a_number_between_2_and_4) values ($2, $2, $1, $2)", list);
+
+// This is equivalent to the above update
+Caffeine.rawUpdate("insert into users set (favorite_number, sign_in_count, first_name, a_number_between_2_and_4) values ($2, $2, $1, $2)", "Grawr", 3);
 ```
 
 AR-like where with HashMap args and additional options.
@@ -105,7 +117,7 @@ map.put("first_name", "Elizabeth");
 map.put("sign_in_count", 1447);
 otherOptionsMap.put("limit", 2);
 CaffeineObject.setQueryClass(User.class);
-List<CaffeineObject> superUser = Caffeine.executeQuery(map, otherOptionsMap);
+List<CaffeineObject> superUser = Caffeine.query(map, otherOptionsMap);
 ```
 
 Associated models are set in a static block at the class level, then Caffeine knows how to query using a simple `getAssociated` method. Foreign keys are an optional second argument to the `getAssociated` function. See the provided example User and Download classes for more context.
@@ -133,10 +145,10 @@ List<Object> insertArgs = new ArrayList<Object>();
 insertArgs.add("Grawr");
 insertArgs.add("McPhee");
 insertArgs.add("something_else@example.com");
-Caffeine.executeUpdate("insert into users (first_name, last_name, email) values (?, ?, ?)", insertArgs);
+Caffeine.rawUpdate("insert into users (first_name, last_name, email) values (?, ?, ?)", insertArgs);
 
 CaffeineObject.setQueryClass(User.class);
-List<CaffeineObject> users = Caffeine.executeQuery("select * from users order by id desc limit 5");
+List<CaffeineObject> users = Caffeine.rawQuery("select * from users order by id desc limit 5");
 ```
 
 Inserts, updates, and deletes can also be handled in a more AR-like format. The object `create` and `update` calls are performed on will have the inserted attributes on itself after execution.
