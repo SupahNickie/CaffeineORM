@@ -31,7 +31,7 @@ public class CaffeineObject {
 
 	@SuppressWarnings("rawtypes")
 	public static final void setQueryClass(Class klass) {
-		Caffeine.setQueryClass(klass);
+		CaffeineConnection.setQueryClass(klass);
 	}
 
 	public final static CaffeineChainable chainable() {
@@ -40,7 +40,7 @@ public class CaffeineObject {
 
 	@SuppressWarnings("rawtypes")
 	public final static CaffeineChainable chainable(Class klass) {
-		Caffeine.setQueryClass(klass);
+		CaffeineConnection.setQueryClass(klass);
 		return new CaffeineChainable();
 	}
 
@@ -48,15 +48,15 @@ public class CaffeineObject {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static final CaffeineObject find(Class klass, int i) throws Exception {
-		Connection c = Caffeine.setup();
-		CaffeineObject newInstance = (CaffeineObject) Caffeine.setQueryClass(klass).getConstructor().newInstance();
+		Connection c = CaffeineConnection.setup();
+		CaffeineObject newInstance = (CaffeineObject) CaffeineConnection.setQueryClass(klass).getConstructor().newInstance();
 		PreparedStatement ps = c.prepareStatement(CaffeineObject.baseQuery() + " where id = ?");
 		ps.setInt(1, i);
 		ResultSet rs = ps.executeQuery();
 		while (rs.next()) {
 			newInstance.setAttrs(rs);
 		}
-		Caffeine.teardown(rs, ps);
+		CaffeineConnection.teardown(rs, ps);
 		return newInstance;
 	}
 
@@ -65,8 +65,8 @@ public class CaffeineObject {
 		try {
 			Method valid = klass.getMethod("validate", new Class[] { String.class });
 			if ((boolean) valid.invoke(klass.newInstance(), new Object[] { "create" })) {
-				Caffeine.setQueryClass(klass);
-				Object[] argKeys = args.keySet().toArray();
+				CaffeineConnection.setQueryClass(klass);
+				List<Object> argKeys = new ArrayList<Object>(args.keySet());
 				String sql = insertInsertPlaceholders(args, argKeys);
 				return CaffeineSQLRunner.executeUpdate(sql, args, argKeys, (CaffeineObject) klass.newInstance());
 			} else {
@@ -84,9 +84,9 @@ public class CaffeineObject {
 	public final CaffeineObject create() {
 		try {
 			if (validate("create")) {
-				Caffeine.setQueryClass(this.getClass());
+				CaffeineConnection.setQueryClass(this.getClass());
 				Map<String, Object> args = new HashMap<String, Object>();
-				Field[] fields = Caffeine.getQueryClass().getDeclaredFields();
+				Field[] fields = CaffeineConnection.getQueryClass().getDeclaredFields();
 				for (Field field : fields) {
 					String[] nameSplit = field.toString().split("\\.");
 					String simpleName = nameSplit[nameSplit.length - 1];
@@ -95,7 +95,7 @@ public class CaffeineObject {
 						args.put(simpleName, field.get(this));
 					}
 				}
-				Object[] argKeys = args.keySet().toArray();
+				List<Object> argKeys = new ArrayList<Object>(args.keySet());
 				String sql = insertInsertPlaceholders(args, argKeys);
 				return CaffeineSQLRunner.executeUpdate(sql, args, argKeys, this);
 			} else {
@@ -111,8 +111,8 @@ public class CaffeineObject {
 	public final CaffeineObject update(Map<String, Object> args) {
 		try {
 			if (validate("update")) {
-				Caffeine.setQueryClass(this.getClass());
-				Object[] argKeys = args.keySet().toArray();
+				CaffeineConnection.setQueryClass(this.getClass());
+				List<Object> argKeys = new ArrayList<Object>(args.keySet());
 				String sql = insertUpdatePlaceholders(args, argKeys);
 				return CaffeineSQLRunner.executeUpdate(sql, args, argKeys, this);
 			} else {
@@ -127,7 +127,7 @@ public class CaffeineObject {
 
 	public final boolean delete() {
 		try {
-			Caffeine.setQueryClass(this.getClass());
+			CaffeineConnection.setQueryClass(this.getClass());
 			String tableName = (String) getFieldValue("tableName");
 			int id = (int) getFieldValue("id", this);
 			String sql = "delete from " + tableName + " where id = " + id;
@@ -146,7 +146,7 @@ public class CaffeineObject {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public final List<CaffeineObject> getAssociated(Class associated, String foreignKey) throws Exception {
-		Map<Class, String> associations = (Map<Class, String>) Caffeine.setQueryClass(this.getClass()).getDeclaredField("caffeineAssociations").get(null);
+		Map<Class, String> associations = (Map<Class, String>) CaffeineConnection.setQueryClass(this.getClass()).getDeclaredField("caffeineAssociations").get(null);
 		String type = associations.get(associated);
 		switch (type) {
 			case "hasMany":
@@ -166,7 +166,7 @@ public class CaffeineObject {
 		int id = (int) getFieldValue("id", this);
 		String foreignLookup = (foreignKey == null) ? tableName.substring(0, tableName.length() - 1) + "_id" : foreignKey;
 		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where " + foreignLookup + " = " + id;
-		Caffeine.setQueryClass(associated);
+		CaffeineConnection.setQueryClass(associated);
 		return CaffeineSQLRunner.executeQuery(sql);
 	}
 
@@ -176,35 +176,35 @@ public class CaffeineObject {
 		String foreignLookup = (foreignKey == null) ? associatedTableName.substring(0, associatedTableName.length() -1) + "_id" : foreignKey;
 		int id = (int) getFieldValue(foreignLookup, this);
 		String sql = "select " + associatedTableName + ".* from " + associatedTableName + " where id = " + id;
-		Caffeine.setQueryClass(associated);
+		CaffeineConnection.setQueryClass(associated);
 		return CaffeineSQLRunner.executeQuery(sql);
 	}
 
 	/* Helper methods */
 
-	private final static String insertInsertPlaceholders(Map<String, Object> args, Object[] argKeys) throws Exception {
+	private final static String insertInsertPlaceholders(Map<String, Object> args, List<Object> argKeys) throws Exception {
 		String tableName = (String) getFieldValue("tableName");
 		String sql = "insert into " + tableName + " (";
-		for (int i = 0; i < argKeys.length; i++) {
-			sql = sql + argKeys[i];
-			if (i != argKeys.length - 1) { sql = sql + ", "; }
+		for (int i = 0; i < argKeys.size(); i++) {
+			sql = sql + argKeys.get(i);
+			if (i != argKeys.size()- 1) { sql = sql + ", "; }
 		}
 		sql = sql + ") values (";
-		for (int j = 0; j < argKeys.length; j++) {
+		for (int j = 0; j < argKeys.size(); j++) {
 			sql = sql + "?";
-			if (j != argKeys.length - 1) { sql = sql + ", "; }
+			if (j != argKeys.size() - 1) { sql = sql + ", "; }
 		}
 		sql = sql + ")";
 		return sql;
 	}
 
-	private final String insertUpdatePlaceholders(Map<String, Object> args, Object[] argKeys) throws Exception {
+	private final String insertUpdatePlaceholders(Map<String, Object> args, List<Object> argKeys) throws Exception {
 		String tableName = (String) getFieldValue("tableName");
 		int id = (int) getFieldValue("id", this);
 		String sql = "update " + tableName + " set ";
-		for (int i = 0; i < argKeys.length; i++) {
-			sql = sql + argKeys[i] + " = ?";
-			if (i != argKeys.length - 1) { sql = sql + ", "; }
+		for (int i = 0; i < argKeys.size(); i++) {
+			sql = sql + argKeys.get(i) + " = ?";
+			if (i != argKeys.size() - 1) { sql = sql + ", "; }
 		}
 		sql = sql + " where id = " + id;
 		return sql;
@@ -217,7 +217,7 @@ public class CaffeineObject {
 	}
 
 	static final String baseQuery() throws Exception {
-		String tableName = (String) getFieldValue("tableName", Caffeine.getQueryClass());
+		String tableName = (String) getFieldValue("tableName", CaffeineConnection.getQueryClass());
 		String sql = "select " + tableName + ".* from " + tableName;
 		return sql;
 	}
@@ -243,7 +243,7 @@ public class CaffeineObject {
 
 	@SuppressWarnings("rawtypes")
 	private static Object getFieldValue(String fieldName, CaffeineObject instance, Class klassToUse) throws Exception {
-		Class klass = (klassToUse == null) ? Caffeine.getQueryClass() : klassToUse;
+		Class klass = (klassToUse == null) ? CaffeineConnection.getQueryClass() : klassToUse;
 		Field field = klass.getDeclaredField(fieldName);
 		field.setAccessible(true);
 		Object result = field.get(instance);
@@ -253,7 +253,7 @@ public class CaffeineObject {
 	/* Setters */
 
 	final void setAttrs(ResultSet rs) throws Exception {
-		Field[] fields = Caffeine.getQueryClass().getDeclaredFields();
+		Field[] fields = CaffeineConnection.getQueryClass().getDeclaredFields();
 		for (Field field : fields) {
 			try {
 				String[] attrIdentifier = field.toString().split("\\.");
@@ -277,7 +277,7 @@ public class CaffeineObject {
 
 	final void setAttr(String column, Object value) throws Exception {
 		try {
-			Field field = Caffeine.getQueryClass().getDeclaredField(column);
+			Field field = CaffeineConnection.getQueryClass().getDeclaredField(column);
 			field.setAccessible(true);
 			field.set(this, value);
 		} catch (Exception e) {

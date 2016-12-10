@@ -14,7 +14,7 @@ public class CaffeineChainable {
 	@SuppressWarnings("unchecked")
 	public final List<CaffeineObject> execute() throws Exception {
 		String sql = getCurrentQuery();
-		PreparedStatement ps = Caffeine.setup().prepareStatement(sql);
+		PreparedStatement ps = CaffeineConnection.setup().prepareStatement(sql);
 		int counter = 1;
 		for (int i = 0; i < getPlaceholders().size(); i++) {
 			if (getPlaceholders().get(i).getClass().equals(ArrayList.class)) {

@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 import java.util.List;
 import java.util.Map;
 
-public final class Caffeine {
+public final class CaffeineConnection {
 	@SuppressWarnings("rawtypes")
 	private static Class currentQueryClass;
 	private static String dbDriver;

@@ -10,45 +10,76 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class CaffeineParamReplacer {
-	@SuppressWarnings("unchecked")
 	static final PreparedStatement replaceNamedParameters(Connection c, String sql, List<Object> values) throws Exception {
-		int counter = 1;
 		PreparedStatement ps = null;
 		Pattern p = Pattern.compile("\\$\\d*");
 		Matcher m = p.matcher(sql);
-		List<String> allMatches = new ArrayList<String>();
+		List<String> allMatches = findAllNamedParameterPlaceholders(m);
 		Queue<Object> replacementVals = new LinkedList<Object>();
+		sql = insertAdditionalNamedParameterPlaceholders(sql, allMatches, values, replacementVals);
+		ps = c.prepareStatement(sql);
+		insertValuesIntoNamedParametersQuery(ps, replacementVals);
+		return ps;
+	}
+
+	static final PreparedStatement replaceJDBCParameters(Connection c, String sql, List<Object> values) throws Exception {
+		sql = insertAdditionalJDBCPlaceholders(sql, values);
+		PreparedStatement ps = c.prepareStatement(sql);
+		insertValuesIntoJDBCQuery(ps, values);
+		return ps;
+	}
+
+	private static final List<String> findAllNamedParameterPlaceholders(Matcher m) {
+		List<String> allMatches = new ArrayList<String>();
 		while (m.find()) { allMatches.add(m.group()); }
+		return allMatches;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static final String insertAdditionalNamedParameterPlaceholders(String sql, List<String> allMatches, List<Object> values, Queue<Object> replacementVals) {
 		for (String placeholder : allMatches) {
 			int indexToGrab = new Integer(placeholder.split("\\$")[1]) - 1;
-			Object val = values.get(indexToGrab);
-			if (val.getClass().equals(ArrayList.class) || val.getClass().equals(LinkedList.class)) {
-				List<Object> vals = (List<Object>) val;
+			Object value = values.get(indexToGrab);
+			if ( isList(value) ) {
+				List<Object> vals = (List<Object>) value;
 				String arrayPlaceholder = "";
 				for (int i = 0; i < vals.size() - 1; i++) { arrayPlaceholder = arrayPlaceholder.concat("?, "); }
 				arrayPlaceholder = arrayPlaceholder.concat("?");
 				sql = sql.replaceAll("\\$" + (indexToGrab + 1), arrayPlaceholder);
 				for (int j = 0; j < vals.size(); j++) { replacementVals.add(vals.get(j)); }
 			} else {
-				replacementVals.add(val);
+				replacementVals.add(value);
 			}
 		}
 		sql = sql.replaceAll("\\$\\d*", "?");
-		ps = c.prepareStatement(sql);
-		while (!replacementVals.isEmpty()) {
-			ps.setObject(counter, replacementVals.poll());
+		return sql;
+	}
+
+	private static final String insertAdditionalJDBCPlaceholders(String sql, List<Object> values) {
+		Pattern p = Pattern.compile("\\?");
+		Matcher m = p.matcher(sql);
+		int index = 0;
+		while (m.find()) {
+			Object value = values.get(index);
+			if ( isList(value) ) { sql = replaceArrayPlaceholderWithActualCountPlaceholders(sql, value); }
+			index++;
+		}
+		return sql;
+	}
+
+	private static final void insertValuesIntoNamedParametersQuery(PreparedStatement ps, Queue<Object> values) throws Exception {
+		int counter = 1;
+		while (!values.isEmpty()) {
+			ps.setObject(counter, values.poll());
 			counter++;
 		}
-		return ps;
 	}
 
 	@SuppressWarnings("unchecked")
-	static final PreparedStatement replaceJDBCParameters(Connection c, String sql, List<Object> values) throws Exception {
+	private static final void insertValuesIntoJDBCQuery(PreparedStatement ps, List<Object> values) throws Exception {
 		int counter = 1;
-		sql = injectAdditionalPlaceholders(sql, values);
-		PreparedStatement ps = c.prepareStatement(sql);
 		for (Object value : values) {
-			if (value.getClass().equals(ArrayList.class) || value.getClass().equals(LinkedList.class)) {
+			if ( isList(value) ) {
 				List<Object> vals = (List<Object>) value;
 				for (int j = 0; j < vals.size(); j++) {
 					ps.setObject(counter, vals.get(j));
@@ -59,29 +90,21 @@ class CaffeineParamReplacer {
 				counter++;
 			}
 		}
-		return ps;
 	}
 
 	@SuppressWarnings("unchecked")
-	private static final String injectAdditionalPlaceholders(String sql, List<Object> values) {
-		Pattern p = Pattern.compile("\\?");
-		Matcher m = p.matcher(sql);
-		int index = 0;
-		while (m.find()) {
-			Object newVal = values.get(index);
-			if (newVal.getClass().equals(ArrayList.class) || newVal.getClass().equals(LinkedList.class)) {
-				List<Object> vals = (List<Object>) newVal;
-				String arrayPlaceholder = "";
-				for (int i = 0; i < vals.size() - 1; i++) {
-					arrayPlaceholder = arrayPlaceholder.concat("?, ");
-				}
-				arrayPlaceholder = arrayPlaceholder.concat("?");
-				sql = sql.replaceFirst("\\(\\?\\)", "( " + arrayPlaceholder + " )");
-				index++;
-			} else {
-				index++;
-			}
+	private static final String replaceArrayPlaceholderWithActualCountPlaceholders(String sql, Object value) {
+		List<Object> vals = (List<Object>) value;
+		String arrayPlaceholder = "";
+		for (int i = 0; i < vals.size() - 1; i++) {
+			arrayPlaceholder = arrayPlaceholder.concat("?, ");
 		}
+		arrayPlaceholder = arrayPlaceholder.concat("?");
+		sql = sql.replaceFirst("\\(\\?\\)", "( " + arrayPlaceholder + " )");
 		return sql;
+	}
+
+	private static final boolean isList(Object val) {
+		return val.getClass().equals(ArrayList.class) || val.getClass().equals(LinkedList.class);
 	}
 }
