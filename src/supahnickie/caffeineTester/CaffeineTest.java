@@ -328,6 +328,19 @@ public class CaffeineTest {
 	}
 
 	@Test
+	public void createNotPassingValidations() throws Exception {
+		Map<String, Object> args = new HashMap<String, Object>();
+		args.put("first_name", "illegal first name");
+		args.put("last_name", "is not as cool as a flawed hero");
+		User newUser = (User) CaffeineObject.create(User.class, args);
+		assertEquals("return is null because there was an error", null, newUser);
+		User dbUser = (User) CaffeineObject.find(User.class, 4);
+		assertEquals("returned object id should be 0", 0, dbUser.getId());
+		assertEquals("returned object first_name should be null", null, dbUser.getFirstName());
+		assertEquals("returned object last_name should be null", null, dbUser.getLastName());
+	}
+
+	@Test
 	public void createFromInstance() throws Exception {
 		User newUser = new User();
 		newUser.setFirstName("Superman");
@@ -340,6 +353,21 @@ public class CaffeineTest {
 		assertEquals("id should match what is next in the DB sequence", 4, dbUser.getId());
 		assertEquals("first name should match what was put in the args", "Superman", dbUser.getFirstName());
 		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.getLastName());
+	}
+
+	@Test
+	public void createFromInstanceNotPassingValidations() throws Exception {
+		User newUser = new User();
+		newUser.setFirstName("illegal first name");
+		newUser.setLastName("is not as cool as a flawed hero");
+		newUser.create();
+		assertEquals("id should be zero valued because the update didn't pass validations", 0, newUser.getId());
+		assertEquals("first name should match what was already assigned to the object", "illegal first name", newUser.getFirstName());
+		assertEquals("last name should match what was already assigned to the object", "is not as cool as a flawed hero", newUser.getLastName());
+		User dbUser = (User) CaffeineObject.find(User.class, 4);
+		assertEquals("returned object id should be 0", 0, dbUser.getId());
+		assertEquals("returned object first_name should be null", null, dbUser.getFirstName());
+		assertEquals("returned object last_name should be null", null, dbUser.getLastName());
 	}
 
 	@Test
@@ -359,13 +387,28 @@ public class CaffeineTest {
 	}
 
 	@Test
+	public void updateNotPassingValidations() throws Exception {
+		Map<String, Object> args = new HashMap<String, Object>();
+		args.put("first_name", "Superman");
+		args.put("last_name", "another illegal name");
+		User user = (User) CaffeineObject.find(User.class, 2);
+		user.update(args);
+		assertEquals("id should not have been updated", 2, user.getId());
+		assertEquals("first name should not have been changed because it failed validation", "Nick", user.getFirstName());
+		assertEquals("last name should not have been changed because it failed validation", "Case", user.getLastName());
+		User dbUser = (User) CaffeineObject.find(User.class, 2);
+		assertEquals("id should not have been updated", 2, dbUser.getId());
+		assertEquals("first name should match what was originally in the DB", "Nick", dbUser.getFirstName());
+		assertEquals("last name should match what was originally in the DB", "Case", dbUser.getLastName());
+	}
+
+	@Test
 	public void updateNonExistentUser() throws Exception {
 		Map<String, Object> args = new HashMap<String, Object>();
 		args.put("first_name", "Superman");
 		args.put("last_name", "is not as cool as a flawed hero");
 		User user = (User) CaffeineObject.find(User.class, 7);
 		user.update(args);
-		assertArrayEquals("no user should have been updated or created", new Object[] {0, null, null}, new Object[] {user.getId(), user.getFirstName(), user.getLastName()});
 		User dbUser = (User) CaffeineObject.find(User.class, 7);
 		assertArrayEquals("no user should have been updated or created", new Object[] {0, null, null}, new Object[] {dbUser.getId(), dbUser.getFirstName(), dbUser.getLastName()});
 		CaffeineObject.setQueryClass(User.class);

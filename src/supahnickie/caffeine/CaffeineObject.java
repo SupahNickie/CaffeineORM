@@ -66,7 +66,7 @@ public class CaffeineObject {
 			CaffeineConnection.setQueryClass(klass);
 			CaffeineObject newInstance = (CaffeineObject) klass.newInstance();
 			Method validate = klass.getMethod("validate", String.class);
-			if ((boolean) validate.invoke(newInstance.assignCreateArgsToInstance(args), "create")) {
+			if ((boolean) validate.invoke(newInstance.assignMapArgsToInstance(args), "create")) {
 				List<Object> argKeys = new ArrayList<Object>(args.keySet());
 				String sql = insertInsertPlaceholders(args, argKeys);
 				return CaffeineSQLRunner.executeUpdate(sql, args, argKeys, (CaffeineObject) klass.newInstance());
@@ -100,14 +100,17 @@ public class CaffeineObject {
 		}
 	}
 
-	public final CaffeineObject update(Map<String, Object> args) {
+	public final CaffeineObject update(Map<String, Object> args) throws Exception {
+		Map<String, Object> originalState = buildArgsFromCurrentInstance();
 		try {
+			this.assignMapArgsToInstance(args);
 			if (validate("update")) {
 				CaffeineConnection.setQueryClass(this.getClass());
 				List<Object> argKeys = new ArrayList<Object>(args.keySet());
 				String sql = insertUpdatePlaceholders(args, argKeys);
 				return CaffeineSQLRunner.executeUpdate(sql, args, argKeys, this);
 			} else {
+				this.assignMapArgsToInstance(originalState);
 				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
 				return null;
 			}
@@ -258,7 +261,7 @@ public class CaffeineObject {
 
 	/* Setters */
 
-	final CaffeineObject assignCreateArgsToInstance(Map<String, Object> args) throws Exception {
+	final CaffeineObject assignMapArgsToInstance(Map<String, Object> args) throws Exception {
 		List<String> keySet = new ArrayList<String>(args.keySet());
 		for (int i = 0; i < keySet.size(); i++) {
 			this.setAttr(keySet.get(i), args.get(keySet.get(i)));
