@@ -33,7 +33,7 @@ public class User extends CaffeineObject {
 
 	public boolean validate(String validationType) {
 		validationErrors = "";
-		if (validationType == "create") {
+		if (validationType.equals("create")) {
 			return createValidations();
 		} else {
 			return updateValidations();
@@ -41,11 +41,21 @@ public class User extends CaffeineObject {
 	}
 
 	public boolean createValidations() {
-		return true;
+		boolean valid = true;
+		if (this.getFirstName().equals("illegal first name")) {
+			validationErrors = validationErrors + "* first_name of " + this.getFirstName() + " is not allowed for a User *";
+			valid = false;
+		}
+		return valid;
 	}
 
 	public boolean updateValidations() {
-		return true;
+		boolean valid = true;
+		if (this.getLastName().equals("another illegal name")) {
+			validationErrors = validationErrors + "* last_name of " + this.getLastName() + " is not allowed for a User *";
+			valid = false;
+		}
+		return valid;
 	}
 
 	/* Normal Getters */

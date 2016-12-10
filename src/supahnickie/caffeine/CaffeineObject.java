@@ -63,9 +63,10 @@ public class CaffeineObject {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public final static CaffeineObject create(Class klass, Map<String, Object> args) {
 		try {
-			Method valid = klass.getMethod("validate", new Class[] { String.class });
-			if ((boolean) valid.invoke(klass.newInstance(), new Object[] { "create" })) {
-				CaffeineConnection.setQueryClass(klass);
+			CaffeineConnection.setQueryClass(klass);
+			CaffeineObject newInstance = (CaffeineObject) klass.newInstance();
+			Method validate = klass.getMethod("validate", String.class);
+			if ((boolean) validate.invoke(newInstance.assignCreateArgsToInstance(args), "create")) {
 				List<Object> argKeys = new ArrayList<Object>(args.keySet());
 				String sql = insertInsertPlaceholders(args, argKeys);
 				return CaffeineSQLRunner.executeUpdate(sql, args, argKeys, (CaffeineObject) klass.newInstance());
@@ -230,7 +231,7 @@ public class CaffeineObject {
 	/* Getters */
 
 	public final String getValidationErrors() throws Exception {
-		return (String) getFieldValue("validationErrors", this);
+		return this.validationErrors;
 	}
 
 	private static Object getFieldValue(String fieldName) throws Exception {
@@ -256,6 +257,14 @@ public class CaffeineObject {
 	}
 
 	/* Setters */
+
+	final CaffeineObject assignCreateArgsToInstance(Map<String, Object> args) throws Exception {
+		List<String> keySet = new ArrayList<String>(args.keySet());
+		for (int i = 0; i < keySet.size(); i++) {
+			this.setAttr(keySet.get(i), args.get(keySet.get(i)));
+		}
+		return this;
+	}
 
 	final void setAttrs(ResultSet rs) throws Exception {
 		Field[] fields = CaffeineConnection.getQueryClass().getDeclaredFields();

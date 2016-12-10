@@ -567,6 +567,22 @@ public class CaffeineTest {
 		assertEquals("id should match expected possessing user", 2, user.getId());
 	}
 
+	@Test
+	public void createValidations() throws Exception {
+		User user = new User();
+		user.setFirstName("illegal first name");
+		assertEquals("validate on an illegal value should return false", false, user.validate("create"));
+		assertEquals("getValiationErrors should report back the reason", "* first_name of illegal first name is not allowed for a User *", user.getValidationErrors());
+	}
+
+	@Test
+	public void updateValidations() throws Exception {
+		User user = new User();
+		user.setLastName("another illegal name");
+		assertEquals("validate on an illegal value should return false", false, user.validate("update"));
+		assertEquals("getValiationErrors should report back the reason", "* last_name of another illegal name is not allowed for a User *", user.getValidationErrors());
+	}
+
 	// Test helper methods
 
 	@Before
