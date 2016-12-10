@@ -9,7 +9,7 @@ import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class CaffeineParamReplacer {
+final class CaffeineParamReplacer {
 	static final PreparedStatement replaceNamedParameters(Connection c, String sql, List<Object> values) throws Exception {
 		PreparedStatement ps = null;
 		Pattern p = Pattern.compile("\\$\\d*");

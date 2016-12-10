@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class CaffeineSQLRunner {
+final class CaffeineSQLRunner {
 	/* Insert, Update, Delete statements */
 
 	static final void executeUpdate(Connection c, PreparedStatement ps) throws Exception {

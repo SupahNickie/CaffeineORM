@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class CaffeineChainable {
+public final class CaffeineChainable {
 	String currentQuery;
 	boolean firstCondition;
 	List<Object> placeholders = new ArrayList<Object>();

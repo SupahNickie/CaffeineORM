@@ -85,16 +85,7 @@ public class CaffeineObject {
 		try {
 			if (validate("create")) {
 				CaffeineConnection.setQueryClass(this.getClass());
-				Map<String, Object> args = new HashMap<String, Object>();
-				Field[] fields = CaffeineConnection.getQueryClass().getDeclaredFields();
-				for (Field field : fields) {
-					String[] nameSplit = field.toString().split("\\.");
-					String simpleName = nameSplit[nameSplit.length - 1];
-					if ( !(ignoredFields.contains(simpleName) || simpleName.startsWith("$") || simpleName.equals("id")) ) {
-						if (Modifier.isPrivate(field.getModifiers())) { field.setAccessible(true); }
-						args.put(simpleName, field.get(this));
-					}
-				}
+				Map<String, Object> args = buildArgsFromCurrentInstance();
 				List<Object> argKeys = new ArrayList<Object>(args.keySet());
 				String sql = insertInsertPlaceholders(args, argKeys);
 				return CaffeineSQLRunner.executeUpdate(sql, args, argKeys, this);
@@ -181,6 +172,20 @@ public class CaffeineObject {
 	}
 
 	/* Helper methods */
+
+	private final Map<String, Object> buildArgsFromCurrentInstance() throws Exception {
+		Map<String, Object> args = new HashMap<String, Object>();
+		Field[] fields = CaffeineConnection.getQueryClass().getDeclaredFields();
+		for (Field field : fields) {
+			String[] nameSplit = field.toString().split("\\.");
+			String simpleName = nameSplit[nameSplit.length - 1];
+			if ( !(ignoredFields.contains(simpleName) || simpleName.startsWith("$") || simpleName.equals("id")) ) {
+				if (Modifier.isPrivate(field.getModifiers())) { field.setAccessible(true); }
+				args.put(simpleName, field.get(this));
+			}
+		}
+		return args;
+	}
 
 	private final static String insertInsertPlaceholders(Map<String, Object> args, List<Object> argKeys) throws Exception {
 		String tableName = (String) getFieldValue("tableName");
