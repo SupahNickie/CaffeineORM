@@ -387,6 +387,42 @@ public class CaffeineTest {
 	}
 
 	@Test
+	public void updateChangesWithNoArgs() throws Exception {
+		User user = (User) CaffeineObject.find(User.class, 2);
+		assertEquals("id should be what's in the db", 2, user.getId());
+		assertEquals("first name should be what's in the db", "Nick", user.getFirstName());
+		assertEquals("last name should be what's in the db", "Case", user.getLastName());
+		user.setFirstName("Superman");
+		user.setLastName("is not as cool as a flawed hero");
+		user.update();
+		assertEquals("id should not have been updated", 2, user.getId());
+		assertEquals("first name should match what was put in the args", "Superman", user.getFirstName());
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", user.getLastName());
+		User dbUser = (User) CaffeineObject.find(User.class, 2);
+		assertEquals("id should not have been updated", 2, dbUser.getId());
+		assertEquals("first name should match what was put in the args", "Superman", dbUser.getFirstName());
+		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.getLastName());
+	}
+
+	@Test
+	public void updateChangesWithNoArgsFailingValidations() throws Exception {
+		User user = (User) CaffeineObject.find(User.class, 2);
+		assertEquals("id should be what's in the db", 2, user.getId());
+		assertEquals("first name should be what's in the db", "Nick", user.getFirstName());
+		assertEquals("last name should be what's in the db", "Case", user.getLastName());
+		user.setFirstName("Superman");
+		user.setLastName("another illegal name");
+		user.update();
+		assertEquals("id should not have been updated", 2, user.getId());
+		assertEquals("first name should match what was set", "Superman", user.getFirstName());
+		assertEquals("last name should match what was put in the args", "another illegal name", user.getLastName());
+		User dbUser = (User) CaffeineObject.find(User.class, 2);
+		assertEquals("id should not have been updated", 2, dbUser.getId());
+		assertEquals("first name should not have been updated in the db", "Nick", dbUser.getFirstName());
+		assertEquals("last name should not have been updated in the db", "Case", dbUser.getLastName());
+	}
+
+	@Test
 	public void updateNotPassingValidations() throws Exception {
 		Map<String, Object> args = new HashMap<String, Object>();
 		args.put("first_name", "Superman");

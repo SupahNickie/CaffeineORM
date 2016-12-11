@@ -120,6 +120,26 @@ public class CaffeineObject {
 		}
 	}
 
+	/* Already have an instance in memory, just wanting to persist changes to the DB */
+
+	public final CaffeineObject update() throws Exception {
+		try {
+			if (validate("update")) {
+				Map<String, Object> args = this.buildArgsFromCurrentInstance();
+				CaffeineConnection.setQueryClass(this.getClass());
+				List<Object> argKeys = new ArrayList<Object>(args.keySet());
+				String sql = insertUpdatePlaceholders(args, argKeys);
+				return CaffeineSQLRunner.executeUpdate(sql, args, argKeys, this);
+			} else {
+				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
+				return null;
+			}
+		} catch (Exception e) {
+			System.out.println(e);
+			return null;
+		}
+	}
+
 	public final boolean delete() {
 		try {
 			CaffeineConnection.setQueryClass(this.getClass());
