@@ -147,8 +147,7 @@ insertArgs.add("McPhee");
 insertArgs.add("something_else@example.com");
 CaffeineConnection.rawUpdate("insert into users (first_name, last_name, email) values (?, ?, ?)", insertArgs);
 
-CaffeineObject.setQueryClass(User.class);
-List<CaffeineObject> users = CaffeineConnection.rawQuery("select * from users order by id desc limit 5");
+CaffeineConnection.rawUpdate("insert into users (first_name, last_name, email) values ($1, $2, $3)", "Grawr", "McPhee", "something_else@example.com");
 ```
 
 Inserts, updates, and deletes can also be handled in a more AR-like format. The object `create` and `update` calls are performed on will have the inserted attributes on itself after execution.
