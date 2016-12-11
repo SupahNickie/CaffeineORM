@@ -158,12 +158,14 @@ createArgs.put("email", "superexample@example.com");
 createArgs.put("first_name", "Stephen");
 User newlyInstantiatedUser = (User) CaffeineObject.create(User.class, createArgs);
 
-// Objects that have attributes in memory but are not persisted in the database yet also have an instance method to create them.
+// Objects that have attributes in memory but are not persisted in the database yet also have an instance method to create/update them.
 
 User anotherNewUser = new User();
-anotherNewUser.first_name = "Hop";
-anotherNewUser.last_name = "Skip, and a Jump";
+anotherNewUser.setFirstName("Hop");
+anotherNewUser.setLastName("Skip, and a Jump");
 anotherNewUser.create();
+anotherNewUser.setRole("super");
+anotherNewUser.update();
 
 // Oops, I misspelled his first name; let's update the user.
 createArgs.put("first_name", "Steven");

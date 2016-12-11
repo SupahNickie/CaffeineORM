@@ -125,7 +125,7 @@ public class CaffeineObject {
 	public final CaffeineObject update() throws Exception {
 		try {
 			if (validate("update")) {
-				Map<String, Object> args = this.buildArgsFromCurrentInstance();
+				Map<String, Object> args = buildArgsFromCurrentInstance();
 				CaffeineConnection.setQueryClass(this.getClass());
 				List<Object> argKeys = new ArrayList<Object>(args.keySet());
 				String sql = insertUpdatePlaceholders(args, argKeys);
