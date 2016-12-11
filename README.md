@@ -10,7 +10,7 @@ CaffeineConnection.setConfiguration(driver (example: "org.postgresql.Driver"), u
 
 #### Usage
 
-Queries are done through the CaffeineObject abstract type; a lookup class must be declared in order to perform queries. This field is static on the Caffeine parent class and must be set manually whenever there is a change in the class you would like to lookup.
+Queries are done through the CaffeineObject abstract type; a lookup class must be declared in order to perform queries. This field is static on the CaffeineConnection parent class and must be set manually whenever there is a change in the class you would like to lookup.
 ```
 CaffeineObject user = CaffeineObject.find(User.class, id);
 
@@ -52,13 +52,15 @@ List<CaffeineObject> moreResults = CaffeineObject.chainable(Download.class).join
 List<CaffeineObject> multipleJoins = CaffeineObject.chainable(User.class).join("users.id", "accounts.creator_id").join("left outer", "accounts.partner_id", "partners.id").where("partners.name = 'Huge Corporation'").execute();
 ```
 
-Raw SQL with immediate execution. The Caffeine type can be invoked statically but must be told what class objects to return.
+Raw SQL with immediate execution. The CaffeineConnection type can be invoked statically but must be told what class objects to return. Conversely, you may also elect to return just a List with HashMaps inside if you would prefer and/or if you are doing more complex queries.
 ```
 CaffeineObject.setQueryClass(User.class);
-List<CaffeineObject> admins = CaffeineConnection.rawQuery("select * from users where role = 'super' limit 3");
+List<CaffeineObject> admins = CaffeineConnection.objectQuery("select * from users where role = 'super' limit 3");
+
+List<HashMap<String, Object> rawReturn = CaffeineConnection.rawQuery("select downloads.*, users.* from downloads join users on downloads.user_id = users.id where id in (1, 2, 3) order by downloads.id asc");
 ```
 
-SQL fragment with placeholder values, List of arguments, and additional options. As with any lookup in Caffeine, it must be told what class of objects to return. `IN` syntax is also supported.
+SQL fragment with placeholder values, List of arguments, and additional options. As with any lookup in Caffeine, it must be told what class of objects to return unless calling the `rawQuery` method. `IN` syntax is also supported.
 ```
 List<Object> list = new ArrayList<Object>();
 list.add("Smith");
@@ -72,7 +74,7 @@ Map<String, Object> optionsMap = new HashMap<String, Object>();
 optionsMap.put("limit", 5);
 optionsMap.put("orderBy", "created_at desc");
 CaffeineObject.setQueryClass(User.class);
-List<CaffeineObject> smithUsers = CaffeineConnection.rawQuery("select * from users where last_name ilike ? or first_name ilike ? or id in (?)", list, optionsMap);
+List<CaffeineObject> smithUsers = CaffeineConnection.objectQuery("select * from users where last_name ilike ? or first_name ilike ? or id in (?)", list, optionsMap);
 // select * from users where last_name ilike 'Smith' or first_name ilike 'Bruce' or id in ( 2, 3, 6 ) order by created_at desc limit 5
 ```
 
@@ -87,7 +89,7 @@ names.add("Bunyan");
 names.add("The Third");
 list.add(names);
 CaffeineObject.setQueryClass(User.class);
-List<CaffeineObject> users = CaffeineConnection.rawQuery("select * from users where id = $1 or id = $2 or first_name in ($3) and sign_in_count > $2", list);
+List<CaffeineObject> users = CaffeineConnection.objectQuery("select * from users where id = $1 or id = $2 or first_name in ($3) and sign_in_count > $2", list);
 // select * from users where id = 5 or id = 8 or first_name in ('Paul', 'Bunyan', 'The Third') and sign_in_count > 8
 
 List<String> names = new ArrayList<String>();
@@ -96,7 +98,7 @@ names.add("Bunyan");
 names.add("The Third");
 list.add(names);
 CaffeineObject.setQueryClass(User.class);
-List<CaffeineObject> users = CaffeineConnection.rawQuery("select * from users where id = $1 or id = $2 or first_name in ($3) and sign_in_count > $2", 5, 8, names);
+List<CaffeineObject> users = CaffeineConnection.objectQuery("select * from users where id = $1 or id = $2 or first_name in ($3) and sign_in_count > $2", 5, 8, names);
 // select * from users where id = 5 or id = 8 or first_name in ('Paul', 'Bunyan', 'The Third') and sign_in_count > 8
 
 List<Object> list = new ArrayList<Object>();

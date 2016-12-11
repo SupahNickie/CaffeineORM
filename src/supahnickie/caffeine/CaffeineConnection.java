@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -65,10 +66,13 @@ public final class CaffeineConnection {
 	public static final void rawUpdate(String sql) throws Exception { CaffeineSQLRunner.executeUpdate(sql); }
 	public static final void rawUpdate(String sql, List<Object> args) throws Exception { CaffeineSQLRunner.executeUpdate(sql, args); }
 	public static final void rawUpdate(String sql, Object... args) throws Exception { CaffeineSQLRunner.executeUpdate(sql, args); }
-	public static final List<CaffeineObject> rawQuery(String sql) throws Exception { return CaffeineSQLRunner.executeQuery(sql); }
-	public static final List<CaffeineObject> rawQuery(String sql, List<Object> args) throws Exception { return CaffeineSQLRunner.executeQuery(sql, args, null); }
-	public static final List<CaffeineObject> rawQuery(String sql, Object... args) throws Exception { return CaffeineSQLRunner.executeQuery(sql, args); }
-	public static final List<CaffeineObject> rawQuery(String sql, List<Object> args, Map<String, Object> options) throws Exception { return CaffeineSQLRunner.executeQuery(sql, args, options); }
+	public static final List<HashMap<String, Object>> rawQuery(String sql) throws Exception { return CaffeineSQLRunner.executeComplexQuery(sql); }
+	public static final List<HashMap<String, Object>> rawQuery(String sql, List<Object> args) throws Exception { return CaffeineSQLRunner.executeComplexQuery(sql, args); }
+	public static final List<HashMap<String, Object>> rawQuery(String sql, Object... args) throws Exception { return CaffeineSQLRunner.executeComplexQuery(sql, args); }
+	public static final List<CaffeineObject> objectQuery(String sql) throws Exception { return CaffeineSQLRunner.executeQuery(sql); }
+	public static final List<CaffeineObject> objectQuery(String sql, List<Object> args) throws Exception { return CaffeineSQLRunner.executeQuery(sql, args, null); }
+	public static final List<CaffeineObject> objectQuery(String sql, Object... args) throws Exception { return CaffeineSQLRunner.executeQuery(sql, args); }
+	public static final List<CaffeineObject> objectQuery(String sql, List<Object> args, Map<String, Object> options) throws Exception { return CaffeineSQLRunner.executeQuery(sql, args, options); }
 	public static final List<CaffeineObject> query(Map<String, Object> args) throws Exception { return CaffeineSQLRunner.executeQuery(args, null); }
 	public static final List<CaffeineObject> query(Map<String, Object> args, Map<String, Object> options) throws Exception { return CaffeineSQLRunner.executeQuery(args, options); }
 }

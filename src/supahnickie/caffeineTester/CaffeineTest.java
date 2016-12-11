@@ -14,6 +14,72 @@ import supahnickie.testClasses.*;
 public class CaffeineTest {
 
 	@Test
+	public void rawQueryRawData() throws Exception {
+		List<HashMap<String, Object>> rawReturn = CaffeineConnection.rawQuery("select downloads.*, users.* from downloads join users on downloads.user_id = users.id where downloads.id in (1, 2, 3) order by downloads.id asc");
+		assertEquals("size of return should match expected", 3, rawReturn.size());
+		Map<String, Object> returnAttrs1 = rawReturn.get(0);
+		Map<String, Object> returnAttrs2 = rawReturn.get(1);
+		Map<String, Object> returnAttrs3 = rawReturn.get(2);
+		assertArrayEquals("expected download and user attributes should appear together", new Object[] {"FileTest num 1", "Nick"}, new Object[] {returnAttrs1.get("file_file_name"), returnAttrs1.get("first_name")});
+		assertArrayEquals("expected download and user attributes should appear together", new Object[] {"FileTest num 2", "Test"}, new Object[] {returnAttrs2.get("file_file_name"), returnAttrs2.get("first_name")});
+		assertArrayEquals("expected download and user attributes should appear together", new Object[] {"FileTest num 3", "Grawr"}, new Object[] {returnAttrs3.get("file_file_name"), returnAttrs3.get("first_name")});
+	}
+
+	@Test
+	public void rawQueryRawDataNamedParameters() throws Exception {
+		// List as argument
+		List<Integer> idList = new ArrayList<Integer>();
+		idList.add(1);
+		idList.add(2);
+		idList.add(3);
+		List<HashMap<String, Object>> rawReturn = CaffeineConnection.rawQuery("select downloads.*, users.* from downloads join users on downloads.user_id = users.id where downloads.id in ($1) order by downloads.id asc", idList);
+		assertEquals("size of return should match expected", 3, rawReturn.size());
+		Map<String, Object> returnAttrs1 = rawReturn.get(0);
+		Map<String, Object> returnAttrs2 = rawReturn.get(1);
+		Map<String, Object> returnAttrs3 = rawReturn.get(2);
+		assertArrayEquals("expected download and user attributes should appear together", new Object[] {"FileTest num 1", "Nick"}, new Object[] {returnAttrs1.get("file_file_name"), returnAttrs1.get("first_name")});
+		assertArrayEquals("expected download and user attributes should appear together", new Object[] {"FileTest num 2", "Test"}, new Object[] {returnAttrs2.get("file_file_name"), returnAttrs2.get("first_name")});
+		assertArrayEquals("expected download and user attributes should appear together", new Object[] {"FileTest num 3", "Grawr"}, new Object[] {returnAttrs3.get("file_file_name"), returnAttrs3.get("first_name")});
+
+		// Object... as argument
+		rawReturn = CaffeineConnection.rawQuery("select downloads.*, users.* from downloads join users on downloads.user_id = users.id where downloads.id in ($1, $2, $3) order by downloads.id asc", 1, 2, 3);
+		assertEquals("size of return should match expected", 3, rawReturn.size());
+		returnAttrs1 = rawReturn.get(0);
+		returnAttrs2 = rawReturn.get(1);
+		returnAttrs3 = rawReturn.get(2);
+		assertArrayEquals("expected download and user attributes should appear together", new Object[] {"FileTest num 1", "Nick"}, new Object[] {returnAttrs1.get("file_file_name"), returnAttrs1.get("first_name")});
+		assertArrayEquals("expected download and user attributes should appear together", new Object[] {"FileTest num 2", "Test"}, new Object[] {returnAttrs2.get("file_file_name"), returnAttrs2.get("first_name")});
+		assertArrayEquals("expected download and user attributes should appear together", new Object[] {"FileTest num 3", "Grawr"}, new Object[] {returnAttrs3.get("file_file_name"), returnAttrs3.get("first_name")});
+	}
+
+	@Test
+	public void rawQueryRawDataJDBCParameters() throws Exception {
+		// List as argument
+		List<Integer> idList = new ArrayList<Integer>();
+		idList.add(1);
+		idList.add(2);
+		idList.add(3);
+		List<HashMap<String, Object>> rawReturn = CaffeineConnection.rawQuery("select downloads.*, users.* from downloads join users on downloads.user_id = users.id where downloads.id in (?) order by downloads.id asc", idList);
+		assertEquals("size of return should match expected", 3, rawReturn.size());
+		Map<String, Object> returnAttrs1 = rawReturn.get(0);
+		Map<String, Object> returnAttrs2 = rawReturn.get(1);
+		Map<String, Object> returnAttrs3 = rawReturn.get(2);
+		assertArrayEquals("expected download and user attributes should appear together", new Object[] {"FileTest num 1", "Nick"}, new Object[] {returnAttrs1.get("file_file_name"), returnAttrs1.get("first_name")});
+		assertArrayEquals("expected download and user attributes should appear together", new Object[] {"FileTest num 2", "Test"}, new Object[] {returnAttrs2.get("file_file_name"), returnAttrs2.get("first_name")});
+		assertArrayEquals("expected download and user attributes should appear together", new Object[] {"FileTest num 3", "Grawr"}, new Object[] {returnAttrs3.get("file_file_name"), returnAttrs3.get("first_name")});
+
+		// Object... as argument
+		rawReturn = CaffeineConnection.rawQuery("select downloads.*, users.* from downloads join users on downloads.user_id = users.id where downloads.id in (?, ?, ?) order by downloads.id asc", 1, 2, 3);
+		assertEquals("size of return should match expected", 3, rawReturn.size());
+		returnAttrs1 = rawReturn.get(0);
+		returnAttrs2 = rawReturn.get(1);
+		returnAttrs3 = rawReturn.get(2);
+		assertArrayEquals("expected download and user attributes should appear together", new Object[] {"FileTest num 1", "Nick"}, new Object[] {returnAttrs1.get("file_file_name"), returnAttrs1.get("first_name")});
+		assertArrayEquals("expected download and user attributes should appear together", new Object[] {"FileTest num 2", "Test"}, new Object[] {returnAttrs2.get("file_file_name"), returnAttrs2.get("first_name")});
+		assertArrayEquals("expected download and user attributes should appear together", new Object[] {"FileTest num 3", "Grawr"}, new Object[] {returnAttrs3.get("file_file_name"), returnAttrs3.get("first_name")});
+	}
+
+	@Test
 	public void rawUpdateWithNamedParameters() throws Exception {
 		List<Object> args = new ArrayList<Object>();
 		args.add(6);
@@ -38,7 +104,7 @@ public class CaffeineTest {
 	public void rawUpdate() throws Exception {
 		CaffeineConnection.rawUpdate("insert into downloads (id, org_id, file_file_name) values (15, 1, 'download1'), (16, 1, 'download2')");
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = CaffeineConnection.rawQuery("select * from downloads where id in (15, 16)");
+		List<CaffeineObject> downloads = CaffeineConnection.objectQuery("select * from downloads where id in (15, 16)");
 		Download download15 = (Download) downloads.get(0);
 		Download download16 = (Download) downloads.get(1);
 		assertArrayEquals("returned downloads should match expected ids", new int[] {15, 16}, new int[] {download15.id, download16.id});
@@ -62,9 +128,9 @@ public class CaffeineTest {
 	}
 
 	@Test
-	public void rawQuery() throws Exception {
+	public void objectQuery() throws Exception {
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = CaffeineConnection.rawQuery("select * from downloads");
+		List<CaffeineObject> downloads = CaffeineConnection.objectQuery("select * from downloads");
 		assertEquals("size of return array should match seeds", 4, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -80,7 +146,7 @@ public class CaffeineTest {
 		args.add("FileTest num 2");
 		args.add(2);
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = CaffeineConnection.rawQuery("select * from downloads where file_file_name = $1 or org_id = $2 order by id asc", args);
+		List<CaffeineObject> downloads = CaffeineConnection.objectQuery("select * from downloads where file_file_name = $1 or org_id = $2 order by id asc", args);
 		assertEquals("size of return array should match expected return", 3, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -93,7 +159,7 @@ public class CaffeineTest {
 	@Test
 	public void rawQueryWithNamedParamsAndUnstructuredArgs() throws Exception {
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = CaffeineConnection.rawQuery("select * from downloads where file_file_name = $1 or org_id = $2 order by id asc", "FileTest num 2", 2);
+		List<CaffeineObject> downloads = CaffeineConnection.objectQuery("select * from downloads where file_file_name = $1 or org_id = $2 order by id asc", "FileTest num 2", 2);
 		assertEquals("size of return array should match expected return", 3, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -116,7 +182,7 @@ public class CaffeineTest {
 		args.add(orgIdArg);
 		args.add(filenameArg);
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = CaffeineConnection.rawQuery("select * from downloads where org_id in ($1) or file_file_name in ($2) order by id asc", args);
+		List<CaffeineObject> downloads = CaffeineConnection.objectQuery("select * from downloads where org_id in ($1) or file_file_name in ($2) order by id asc", args);
 		assertEquals("size of return array should match expected return", 3, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -139,7 +205,7 @@ public class CaffeineTest {
 		filenameArg.add("FileTest num 1");
 		filenameArg.add("FileTest num 2");
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = CaffeineConnection.rawQuery("select * from downloads where org_id in ($1) or file_file_name in ($2) or id = $3 order by id asc", orgIdArg, filenameArg, 2);
+		List<CaffeineObject> downloads = CaffeineConnection.objectQuery("select * from downloads where org_id in ($1) or file_file_name in ($2) or id = $3 order by id asc", orgIdArg, filenameArg, 2);
 		assertEquals("size of return array should match expected return", 3, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -158,7 +224,7 @@ public class CaffeineTest {
 		args.add("FileTest num 2");
 		args.add(2);
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = CaffeineConnection.rawQuery("select * from downloads where file_file_name = ? or org_id = ? order by id asc", args);
+		List<CaffeineObject> downloads = CaffeineConnection.objectQuery("select * from downloads where file_file_name = ? or org_id = ? order by id asc", args);
 		assertEquals("size of return array should match expected return", 3, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -171,7 +237,7 @@ public class CaffeineTest {
 	@Test
 	public void rawQueryWithUnstructuredListArgs() throws Exception {
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = CaffeineConnection.rawQuery("select * from downloads where file_file_name = ? or org_id = ? order by id asc", "FileTest num 2", 2);
+		List<CaffeineObject> downloads = CaffeineConnection.objectQuery("select * from downloads where file_file_name = ? or org_id = ? order by id asc", "FileTest num 2", 2);
 		assertEquals("size of return array should match expected return", 3, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -196,7 +262,7 @@ public class CaffeineTest {
 		otherArrayArg.add(6);
 		args.add(otherArrayArg);
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = CaffeineConnection.rawQuery("select * from downloads where file_file_name = ? or id in (?) or org_id in (?) order by id asc", args);
+		List<CaffeineObject> downloads = CaffeineConnection.objectQuery("select * from downloads where file_file_name = ? or id in (?) or org_id in (?) order by id asc", args);
 		assertEquals("size of return array should match expected return", 3, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -220,7 +286,7 @@ public class CaffeineTest {
 		otherArrayArg.add(1);
 		otherArrayArg.add(6);
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = CaffeineConnection.rawQuery("select * from downloads where file_file_name = ? or id in (?) or org_id in (?) order by id asc", "FileTest num 2", arrayArg, otherArrayArg);
+		List<CaffeineObject> downloads = CaffeineConnection.objectQuery("select * from downloads where file_file_name = ? or id in (?) or org_id in (?) order by id asc", "FileTest num 2", arrayArg, otherArrayArg);
 		assertEquals("size of return array should match expected return", 3, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		Download download2 = (Download) downloads.get(1);
@@ -242,7 +308,7 @@ public class CaffeineTest {
 		options.put("limit", 1);
 		options.put("orderBy", "id asc");
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = CaffeineConnection.rawQuery("select * from downloads where file_file_name = ? or org_id = ?", args, options);
+		List<CaffeineObject> downloads = CaffeineConnection.objectQuery("select * from downloads where file_file_name = ? or org_id = ?", args, options);
 		assertEquals("size of return array should match expected return", 1, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		assertEquals("download1 file name should match seed", "FileTest num 3", download1.file_file_name);
@@ -448,7 +514,7 @@ public class CaffeineTest {
 		User dbUser = (User) CaffeineObject.find(User.class, 7);
 		assertArrayEquals("no user should have been updated or created", new Object[] {0, null, null}, new Object[] {dbUser.getId(), dbUser.getFirstName(), dbUser.getLastName()});
 		CaffeineObject.setQueryClass(User.class);
-		List<CaffeineObject> users = CaffeineConnection.rawQuery("select * from users");
+		List<CaffeineObject> users = CaffeineConnection.objectQuery("select * from users");
 		assertEquals("size of return should match expected", 3, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
@@ -463,7 +529,7 @@ public class CaffeineTest {
 		boolean result = user.delete();
 		assertEquals("return should be whether or not object was deleted", true, result);
 		CaffeineObject.setQueryClass(User.class);
-		List<CaffeineObject> users = CaffeineConnection.rawQuery("select * from users");
+		List<CaffeineObject> users = CaffeineConnection.objectQuery("select * from users");
 		assertEquals("size of return should match expected", 2, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
@@ -477,7 +543,7 @@ public class CaffeineTest {
 		boolean result = user.delete();
 		assertEquals("return true if sql ran without error", true, result);
 		CaffeineObject.setQueryClass(User.class);
-		List<CaffeineObject> users = CaffeineConnection.rawQuery("select * from users");
+		List<CaffeineObject> users = CaffeineConnection.objectQuery("select * from users");
 		assertEquals("size of return should match expected", 3, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);
