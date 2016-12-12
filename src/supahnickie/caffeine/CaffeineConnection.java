@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class CaffeineConnection {
 	@SuppressWarnings("rawtypes")
@@ -16,12 +17,26 @@ public final class CaffeineConnection {
 	private static String dbUsername;
 	private static String dbPassword;
 	private static Connection connection;
+	private static Map<String, String[]> connectionCredentials = new HashMap<String, String[]>();
 
-	public static final void setConfiguration(String driver, String url, String username, String password) {
-		dbDriver = driver;
-		dbUrl = url;
-		dbUsername = username;
-		dbPassword = password;
+	public static final Set<String> listDatabases() {
+		return connectionCredentials.keySet();
+	}
+
+	public static final void useDatabase(String name) throws Exception {
+		if ( !(connectionCredentials.containsKey(name)) ) {
+			throw new Exception("database " + name + " has not been added to the list of databases yet; use the 'addDatabaseConnection' method");
+		}
+		String[] creds = connectionCredentials.get(name);
+		dbDriver = creds[0];
+		dbUrl = creds[1];
+		dbUsername = creds[2];
+		dbPassword = creds[3];
+	}
+
+	public static final void addDatabaseConnection(String name, String driver, String url, String username, String password) {
+		String[] creds = new String[] { driver, url, username, password };
+		connectionCredentials.put(name, creds);
 	}
 
 	static final Connection setup() {

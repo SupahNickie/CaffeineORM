@@ -14,6 +14,29 @@ import supahnickie.testClasses.*;
 public class CaffeineTest {
 
 	@Test
+	public void multipleDatabaseConnections() throws Exception {
+		CaffeineConnection.useDatabase("primary");
+		CaffeineObject.setQueryClass(User.class);
+		List<CaffeineObject> primaryDbUsers = CaffeineConnection.objectQuery("select * from users");
+		User user1 = (User) primaryDbUsers.get(0);
+		User user2 = (User) primaryDbUsers.get(1);
+		User user3 = (User) primaryDbUsers.get(2);
+		CaffeineConnection.useDatabase("secondary");
+		List<CaffeineObject> secondaryDbUsers = CaffeineConnection.objectQuery("select * from users");
+		User user4 = (User) secondaryDbUsers.get(0);
+		User user5 = (User) secondaryDbUsers.get(1);
+		User user6 = (User) secondaryDbUsers.get(2);
+		CaffeineConnection.useDatabase("tertiary");
+		List<CaffeineObject> tertiaryDbUsers = CaffeineConnection.objectQuery("select * from users");
+		User user7 = (User) tertiaryDbUsers.get(0);
+		User user8 = (User) tertiaryDbUsers.get(1);
+		User user9 = (User) tertiaryDbUsers.get(2);
+		assertArrayEquals("first names from first database should match expected", new String[] { "Grawr", "Nick", "Test" }, new String[] { user1.getFirstName(), user2.getFirstName(), user3.getFirstName() });
+		assertArrayEquals("first names from second database should match expected", new String[] { "Saint", "Easter", "Freddy" }, new String[] { user4.getFirstName(), user5.getFirstName(), user6.getFirstName() });
+		assertArrayEquals("first names from third database should match expected", new String[] { "Oliver", "Thomas", "Tiger" }, new String[] { user7.getFirstName(), user8.getFirstName(), user9.getFirstName() });
+	}
+
+	@Test
 	public void rawQueryRawData() throws Exception {
 		List<HashMap<String, Object>> rawReturn = CaffeineConnection.rawQuery("select downloads.*, users.* from downloads join users on downloads.user_id = users.id where downloads.id in (1, 2, 3) order by downloads.id asc");
 		assertEquals("size of return should match expected", 3, rawReturn.size());
@@ -733,19 +756,24 @@ public class CaffeineTest {
 	@Before
 	public void setUp() throws Exception {
 		// The database must already exist, but should be blank otherwise.
-		CaffeineConnection.setConfiguration(System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL"), System.getenv("CAFFEINE_DB_USERNAME"), System.getenv("CAFFEINE_DB_PASSWORD"));
+		CaffeineConnection.addDatabaseConnection("primary", System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL"), System.getenv("CAFFEINE_DB_USER"), System.getenv("CAFFEINE_DB_PASSWORD"));
+		CaffeineConnection.addDatabaseConnection("secondary", System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL_2"), System.getenv("CAFFEINE_DB_USER"), System.getenv("CAFFEINE_DB_PASSWORD"));
+		CaffeineConnection.addDatabaseConnection("tertiary", System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL_3"), System.getenv("CAFFEINE_DB_USER"), System.getenv("CAFFEINE_DB_PASSWORD"));
 		insertTables();
 		insertUsers();
 		insertDownloads();
+		CaffeineConnection.useDatabase("primary");
 	}
 
 	@After
 	public void tearDown() throws Exception {
+		CaffeineConnection.useDatabase("primary");
 		CaffeineConnection.rawUpdate("drop table if exists users");
 		CaffeineConnection.rawUpdate("drop table if exists downloads");
 	}
 
 	public void insertTables() throws Exception {
+		CaffeineConnection.useDatabase("primary");
 		CaffeineConnection.rawUpdate("drop table if exists users");
 		CaffeineConnection.rawUpdate("drop table if exists downloads");
 		CaffeineConnection.rawUpdate("create table if not exists users (" +
@@ -762,17 +790,51 @@ public class CaffeineTest {
 			"org_id integer, " +
 			"user_id integer)"
 		);
+		CaffeineConnection.useDatabase("secondary");
+		CaffeineConnection.rawUpdate("drop table if exists users");
+		CaffeineConnection.rawUpdate("create table if not exists users (" +
+			"id serial primary key, " +
+			"first_name varchar(255), " +
+			"last_name varchar(255), " +
+			"encrypted_password varchar(255), " +
+			"sign_in_count integer, " +
+			"role varchar(255))"
+		);
+		CaffeineConnection.useDatabase("tertiary");
+		CaffeineConnection.rawUpdate("drop table if exists users");
+		CaffeineConnection.rawUpdate("create table if not exists users (" +
+			"id serial primary key, " +
+			"first_name varchar(255), " +
+			"last_name varchar(255), " +
+			"encrypted_password varchar(255), " +
+			"sign_in_count integer, " +
+			"role varchar(255))"
+		);
 	}
 
 	private void insertUsers() throws Exception {
+		CaffeineConnection.useDatabase("primary");
 		CaffeineConnection.rawUpdate("insert into users (first_name, last_name, encrypted_password, sign_in_count, role) values " +
 			"('Grawr', 'McPhee', 'qwerqwer', 13, 'admin')," +
 			"('Nick', 'Case', 'asdfasdf', 0, 'super')," +
 			"('Test', 'User', 'zxcvzxcv', 3, 'moderator')"
 		);
+		CaffeineConnection.useDatabase("secondary");
+		CaffeineConnection.rawUpdate("insert into users (first_name, last_name, encrypted_password, sign_in_count, role) values " +
+			"('Saint', 'Nicholas', 'opueritpu', 24, 'admin')," +
+			"('Easter', 'Bunny', 'ivobhasd', 4, 'moderator')," +
+			"('Freddy', 'Krueger', '0392ujv', 1, 'normal')"
+		);
+		CaffeineConnection.useDatabase("tertiary");
+		CaffeineConnection.rawUpdate("insert into users (first_name, last_name, encrypted_password, sign_in_count, role) values " +
+			"('Oliver', 'Cromwell', 'v0fd8h', 99, 'super')," +
+			"('Thomas', 'Jefferson', 'as632zz', 357, 'super')," +
+			"('Tiger', 'McLion', 'zxcvzxcv', 67, 'moderator')"
+		);
 	}
 
 	private void insertDownloads() throws Exception {
+		CaffeineConnection.useDatabase("primary");
 		CaffeineConnection.rawUpdate("insert into downloads (file_file_name, org_id, user_id) values " +
 			"('FileTest num 1', 2, 2)," +
 			"('FileTest num 2', 1, 3)," +

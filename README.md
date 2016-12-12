@@ -5,7 +5,15 @@ Caffeine ORM is a wrapper used to handle the lower level database connections an
 
 #### Initialization
 ```
-CaffeineConnection.setConfiguration(driver (example: "org.postgresql.Driver"), url, username, password));
+CaffeineConnection.addDatabase(name of database, driver (example: "org.postgresql.Driver"), url, username, password));
+CaffeineConnection.useDatabase(name of database to use);
+```
+
+Multiple databases are supported for larger applications. The credentials for the database to use is stored in the CaffeineConnection class and can be switched on a per-query basis. If you have a single database application, you merely need to set once and forget.
+```
+CaffeineConnection.addDatabase("secondary", driver, url, username, password);
+CaffeineConnection.addDatabase("tertiary", driver, url, username, password);
+CaffeineConnection.useDatabase("tertiary");
 ```
 
 #### Usage
