@@ -15,11 +15,20 @@ import java.util.Map;
 public class CaffeineObject {
 	static List<String> ignoredFields = new ArrayList<String>();
 	protected String validationErrors = "";
+	Map<String, Object> attrsOnInit = new HashMap<String, Object>();
+	boolean isNewRecord = false;
 
 	static {
 		ignoredFields.add("tableName");
 		ignoredFields.add("validationErrors");
 		ignoredFields.add("caffeineAssociations");
+		ignoredFields.add("attrsOnInit");
+		ignoredFields.add("isNewRecord");
+	}
+
+	protected CaffeineObject() throws Exception {
+		this.isNewRecord = true;
+		this.captureCurrentStateOfAttrs();
 	}
 
 	/* Internal meta-utilities */
@@ -56,6 +65,8 @@ public class CaffeineObject {
 		while (rs.next()) {
 			newInstance.setAttrs(rs);
 		}
+		newInstance.captureCurrentStateOfAttrs();
+		newInstance.setIsNewRecord(false);
 		CaffeineConnection.teardown(rs, ps);
 		return newInstance;
 	}
@@ -197,9 +208,17 @@ public class CaffeineObject {
 
 	/* Helper methods */
 
+	public boolean isNewRecord() { return this.isNewRecord; }
+
+	public boolean isDirty() throws Exception {
+		if (this.attrsOnInit.equals(this.buildArgsFromCurrentInstance())) { return false; }
+		return true;
+	}
+
 	private final Map<String, Object> buildArgsFromCurrentInstance() throws Exception {
 		Map<String, Object> args = new HashMap<String, Object>();
-		Field[] fields = CaffeineConnection.getQueryClass().getDeclaredFields();
+		setQueryClass(this.getClass());
+		Field[] fields = this.getClass().getDeclaredFields();
 		for (Field field : fields) {
 			String[] nameSplit = field.toString().split("\\.");
 			String simpleName = nameSplit[nameSplit.length - 1];
@@ -209,6 +228,10 @@ public class CaffeineObject {
 			}
 		}
 		return args;
+	}
+
+	void captureCurrentStateOfAttrs() throws Exception {
+		this.attrsOnInit = this.buildArgsFromCurrentInstance();
 	}
 
 	private final static String insertInsertPlaceholders(Map<String, Object> args, List<Object> argKeys) throws Exception {
@@ -321,4 +344,6 @@ public class CaffeineObject {
 			// Do nothing
 		}
 	}
+
+	void setIsNewRecord(boolean b) { this.isNewRecord = b; }
 }

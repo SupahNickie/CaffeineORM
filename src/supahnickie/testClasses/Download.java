@@ -25,7 +25,9 @@ public class Download extends CaffeineObject {
 	public String file_file_name;
 	public int user_id;
 
-	public Download() {}
+	public Download() throws Exception {
+		super();
+	}
 
 	/* Validations */
 

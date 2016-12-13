@@ -25,6 +25,8 @@ final class CaffeineSQLRunner {
 		ps.executeUpdate();
 		c.commit();
 		instance.setAttrsFromSqlReturn(ps.getGeneratedKeys());
+		instance.setIsNewRecord(false);
+		instance.captureCurrentStateOfAttrs();
 		c.close();
 		ps.close();
 		CaffeineConnection.teardown();
@@ -118,9 +120,11 @@ final class CaffeineSQLRunner {
 		List<CaffeineObject> ret = new ArrayList<CaffeineObject>();
 		for (HashMap<String, Object> row : table) {
 			CaffeineObject newInstance = (CaffeineObject) CaffeineConnection.getQueryClass().newInstance();
+			newInstance.setIsNewRecord(false);
 			for (String column: row.keySet()) {
 				newInstance.setAttr(column, row.get(column));
 			}
+			newInstance.captureCurrentStateOfAttrs();
 			ret.add(newInstance);
 		}
 		return ret;

@@ -27,7 +27,9 @@ public class User extends CaffeineObject {
 	private int sign_in_count;
 	private String role;
 
-	public User() {}
+	public User() throws Exception {
+		super();
+	}
 
 	/* Validations */
 

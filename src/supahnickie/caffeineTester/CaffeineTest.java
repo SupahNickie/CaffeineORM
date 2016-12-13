@@ -757,6 +757,42 @@ public class CaffeineTest {
 		assertEquals("getValiationErrors should report back the reason", "* last_name of another illegal name is not allowed for a User *", user.getValidationErrors());
 	}
 
+	@Test
+	public void isDirty() throws Exception {
+		User user = new User();
+		assertEquals("dirty on a new record should not be true", false, user.isDirty());
+		user.setFirstName("Grawr");
+		assertEquals("dirty on a changed record should be true", true, user.isDirty());
+		user.setFirstName(null);
+		assertEquals("dirty on a should be set back to false if the record has the same attrs", false, user.isDirty());
+		User user2 = (User) CaffeineObject.find(User.class, 3);
+		assertEquals("dirty on a looked-up record should not be true", false, user2.isDirty());
+		user2.setFirstName("ohhh yeaaaah, snap into a Slim Jim");
+		assertEquals("dirty on an existing record with different attrs than it started should be true", true, user2.isDirty());
+		user2.update();
+		assertEquals("record should not be considered dirty anymore after updating in the DB", false, user2.isDirty());
+		List<CaffeineObject> users = CaffeineConnection.objectQuery("select * from users");
+		assertArrayEquals("all returned records should not be dirty", new boolean[] {false, false, false}, new boolean[] {users.get(0).isDirty(), users.get(2).isDirty(), users.get(2).isDirty()});
+	}
+
+	@Test
+	public void isNewRecord() throws Exception {
+		User user = new User();
+		assertEquals("newRecord on a new record should be true", true, user.isNewRecord());
+		user.setFirstName("Graaw!");
+		assertEquals("changing attrs should not affect whether the record was new or not", true, user.isNewRecord());
+		user.create();
+		assertEquals("once persisted in the DB, the record should not be new anymore", false, user.isNewRecord());
+		User user2 = (User) CaffeineObject.find(User.class, 3);
+		assertEquals("newRecord on a looked-up record should not be true", false, user2.isNewRecord());
+		user2.setFirstName("ohhh yeaaaah, snap into a Slim Jim");
+		assertEquals("changing attrs on an existing record should not affect the state of newRecord", false, user2.isNewRecord());
+		user2.update();
+		assertEquals("existing record should also not change newRecord state after persisting", false, user2.isNewRecord());
+		List<CaffeineObject> users = CaffeineConnection.objectQuery("select * from users");
+		assertArrayEquals("all returned records should not be flagged as new", new boolean[] {false, false, false}, new boolean[] {users.get(0).isNewRecord(), users.get(2).isNewRecord(), users.get(2).isNewRecord()});
+	}
+
 	// Test helper methods
 
 	@Before
