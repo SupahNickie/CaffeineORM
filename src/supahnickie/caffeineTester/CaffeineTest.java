@@ -150,6 +150,12 @@ public class CaffeineTest {
 		assertEquals("org_id should should be changed to reflect the update", 3, download.org_id);
 	}
 
+	@Test(expected = Exception.class)
+	public void objectQueryWithoutSettingClass() throws Exception {
+		CaffeineObject.setQueryClass(null);
+		CaffeineConnection.objectQuery("select * from users");
+	}
+
 	@Test
 	public void objectQuery() throws Exception {
 		CaffeineObject.setQueryClass(Download.class);

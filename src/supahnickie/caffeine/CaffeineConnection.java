@@ -23,6 +23,10 @@ public final class CaffeineConnection {
 		return connectionCredentials.keySet();
 	}
 
+	public static final void raiseNoQuerySetException() throws Exception {
+		throw new Exception("no query class has been set yet so no object queries can commence; use the 'CaffeineObject.setQueryClass' method");
+	}
+
 	public static final void useDatabase(String name) throws Exception {
 		if ( !(connectionCredentials.containsKey(name)) ) {
 			throw new Exception("database " + name + " has not been added to the list of databases yet; use the 'addDatabaseConnection' method");

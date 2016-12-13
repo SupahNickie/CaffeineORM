@@ -78,6 +78,7 @@ final class CaffeineSQLRunner {
 	}
 
 	static final List<CaffeineObject> executeQuery(PreparedStatement ps) throws Exception {
+		raiseExceptionIfNoQueryClass();
 		List<HashMap<String, Object>> table = new ArrayList<HashMap<String, Object>>();
 		ResultSet rs = ps.executeQuery();
 		CaffeineRow.formTable(rs, table);
@@ -149,5 +150,9 @@ final class CaffeineSQLRunner {
 			if (options.containsKey("limit")) { sql = sql + "limit " + options.get("limit") + " "; }
 		}
 		return sql;
+	}
+
+	private static final void raiseExceptionIfNoQueryClass() throws Exception {
+		if (CaffeineConnection.getQueryClass() == null) CaffeineConnection.raiseNoQuerySetException();
 	}
 }
