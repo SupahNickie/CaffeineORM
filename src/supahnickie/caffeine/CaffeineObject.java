@@ -12,6 +12,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
+/**
+ * CaffeineObject is the parent class of your application's model classes. It will also be the primary class
+ * with which you work while using the CaffeineORM.
+ * Any return object of type CaffeineObject can be cast to the appropriate concrete model class if needed.
+ * 
+ * @author Nicholas Case (nicholascase@live.com)
+ * @version 4.1.1
+ */
 public class CaffeineObject {
 	static List<String> ignoredFields = new ArrayList<String>();
 	protected String validationErrors = "";
@@ -33,11 +42,23 @@ public class CaffeineObject {
 
 	/* Internal meta-utilities */
 
+	/**
+	 * Adds a model attribute to the collection of other model attributes that should be ignored
+	 * when returning CaffeineObjects from a query. Things that are not database attributes are good examples.
+	 * @param field	Model attribute to be added to the list of ignored attributes.
+	 * @return {@code List<String>} containing the current list of ignored fields after adding.
+	 */
 	public static List<String> addIgnoredField(String field) {
 		ignoredFields.add(field);
 		return ignoredFields;
 	}
 
+	/**
+	 * Prepares the CaffeineConnection class to assign attributes to instances of the correct class
+	 * after a query. Calling any function that returns {@code List<CaffeineObject>} or {@code CaffeineObject} 
+	 * must first have the query class set properly.
+	 * @param klass The actual class object that queries expect to use.
+	 */
 	@SuppressWarnings("rawtypes")
 	public static final void setQueryClass(Class klass) {
 		CaffeineConnection.setQueryClass(klass);
@@ -55,10 +76,10 @@ public class CaffeineObject {
 
 	/* AR-like CRUD */
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "rawtypes" })
 	public static final CaffeineObject find(Class klass, int i) throws Exception {
 		Connection c = CaffeineConnection.setup();
-		CaffeineObject newInstance = (CaffeineObject) CaffeineConnection.setQueryClass(klass).getConstructor().newInstance();
+		CaffeineObject newInstance = (CaffeineObject) CaffeineConnection.setQueryClass(klass).newInstance();
 		PreparedStatement ps = c.prepareStatement(CaffeineObject.baseQuery() + " where id = ?");
 		ps.setInt(1, i);
 		ResultSet rs = ps.executeQuery();
@@ -69,6 +90,10 @@ public class CaffeineObject {
 		newInstance.setIsNewRecord(false);
 		CaffeineConnection.teardown(rs, ps);
 		return newInstance;
+	}
+
+	public static final CaffeineObject find(int i) throws Exception {
+		return find(CaffeineConnection.getQueryClass(), i);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })

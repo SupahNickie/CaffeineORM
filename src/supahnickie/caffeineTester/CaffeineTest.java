@@ -400,6 +400,15 @@ public class CaffeineTest {
 	}
 
 	@Test
+	public void findAfterQueryClassSet() throws Exception {
+		CaffeineObject.setQueryClass(User.class);
+		User user1 = (User) CaffeineObject.find(1);
+		assertEquals("ids should match expected", 1, user1.getId());
+		assertEquals("first name should match expected", "Grawr", user1.getFirstName());
+		assertEquals("last name should match expected", "McPhee", user1.getLastName());
+	}
+
+	@Test
 	public void findWithNonexistentUser() throws Exception {
 		User user = (User) CaffeineObject.find(User.class, 8);
 		assertEquals("returned object id should be 0", 0, user.getId());
