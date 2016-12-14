@@ -26,7 +26,7 @@ public class Download extends CaffeineObject {
 	public int user_id;
 
 	public Download() throws Exception {
-		super();
+		init();
 	}
 
 	/* Validations */

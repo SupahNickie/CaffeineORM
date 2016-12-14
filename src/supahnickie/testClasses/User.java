@@ -28,7 +28,7 @@ public class User extends CaffeineObject {
 	private String role;
 
 	public User() throws Exception {
-		super();
+		init();
 	}
 
 	/* Validations */

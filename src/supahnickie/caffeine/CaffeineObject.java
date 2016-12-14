@@ -26,7 +26,7 @@ public class CaffeineObject {
 		ignoredFields.add("isNewRecord");
 	}
 
-	protected CaffeineObject() throws Exception {
+	protected void init() throws Exception {
 		this.isNewRecord = true;
 		this.captureCurrentStateOfAttrs();
 	}

@@ -16,6 +16,7 @@ CaffeineConnection.addDatabase("tertiary", driver, url, username, password);
 CaffeineConnection.useDatabase("tertiary");
 ```
 
+Model classes that extend the CaffeineObject type must also call `init()` at the tail end of their constructor methods. Please see either the User or Download example classes for example usage. 
 #### Usage
 
 Queries are done through the CaffeineObject abstract type; a lookup class must be declared in order to perform queries. This field is static on the CaffeineConnection parent class and must be set manually whenever there is a change in the class you would like to lookup.
