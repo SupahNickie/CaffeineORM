@@ -664,6 +664,20 @@ public class CaffeineTest {
 	}
 
 	@Test
+	public void whereWithVarArgs() throws Exception {
+		List<CaffeineObject> users = CaffeineObject.chainable(User.class).where("id in (?, ?)", 2, 3).execute();
+		assertEquals("size of return list should match expected", 2, users.size());
+		User user1 = (User) users.get(0);
+		User user2 = (User) users.get(1);
+		assertEquals("id should match expected", 2, user1.getId());
+		assertEquals("first name should match expected", "Nick", user1.getFirstName());
+		assertEquals("last name should match expected", "Case", user1.getLastName());
+		assertEquals("id should match expected", 3, user2.getId());
+		assertEquals("first name should match expected", "Test", user2.getFirstName());
+		assertEquals("last name should match expected", "User", user2.getLastName());
+	}
+
+	@Test
 	public void or() throws Exception {
 		List<CaffeineObject> users = CaffeineObject.chainable(User.class).where("id in (2, 3)").or("first_name = 'Grawr'").execute();
 		assertEquals("size of return list should match expected", 3, users.size());
@@ -701,6 +715,20 @@ public class CaffeineTest {
 		args.add(2);
 		args.add(3);
 		List<CaffeineObject> users = CaffeineObject.chainable(User.class).where("id = 2").or("id in (?, ?)", args).execute();
+		assertEquals("size of return list should match expected", 2, users.size());
+		User user1 = (User) users.get(0);
+		User user2 = (User) users.get(1);
+		assertEquals("id should match expected", 2, user1.getId());
+		assertEquals("first name should match expected", "Nick", user1.getFirstName());
+		assertEquals("last name should match expected", "Case", user1.getLastName());
+		assertEquals("id should match expected", 3, user2.getId());
+		assertEquals("first name should match expected", "Test", user2.getFirstName());
+		assertEquals("last name should match expected", "User", user2.getLastName());
+	}
+
+	@Test
+	public void orWithVarArgs() throws Exception {
+		List<CaffeineObject> users = CaffeineObject.chainable(User.class).where("id = 2").or("id in (?, ?)", 2, 3).execute();
 		assertEquals("size of return list should match expected", 2, users.size());
 		User user1 = (User) users.get(0);
 		User user2 = (User) users.get(1);

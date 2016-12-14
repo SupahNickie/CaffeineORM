@@ -64,6 +64,11 @@ public class CaffeineObject {
 		CaffeineConnection.setQueryClass(klass);
 	}
 
+	/**
+	 * 
+	 * @return An instance of the CaffeineChainable class from which you can join additional queries using the 
+	 * {@code join()}, {@code where()}, and {@code or()} methods, actually running the query with {@code execute()}
+	 */
 	public final static CaffeineChainable chainable() {
 		return new CaffeineChainable();
 	}

@@ -2,6 +2,7 @@ package supahnickie.caffeine;
 
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,14 +18,9 @@ public final class CaffeineChainable {
 		PreparedStatement ps = CaffeineConnection.setup().prepareStatement(sql);
 		int counter = 1;
 		for (int i = 0; i < getPlaceholders().size(); i++) {
-			if (getPlaceholders().get(i).getClass().equals(ArrayList.class)) {
-				List<Object> arrayArgs = (List<Object>) getPlaceholders().get(i);
-				for (int j = 0; j < arrayArgs.size(); j++) {
-					ps.setObject(counter, arrayArgs.get(j));
-					counter++;
-				}
-			} else {
-				ps.setObject(counter, getPlaceholders().get(i));
+			List<Object> arrayArgs = (List<Object>) getPlaceholders().get(i);
+			for (int j = 0; j < arrayArgs.size(); j++) {
+				ps.setObject(counter, arrayArgs.get(j));
 				counter++;
 			}
 		}
@@ -52,13 +48,13 @@ public final class CaffeineChainable {
 		return appendCondition("and", condition);
 	}
 
-	public final CaffeineChainable where(String condition, Object placeholderValue) throws Exception {
-		getPlaceholders().add(placeholderValue);
+	public final CaffeineChainable where(String condition, Object... args) throws Exception {
+		getPlaceholders().add(Arrays.asList(args));
 		return where(condition);
 	}
 
-	public final CaffeineChainable where(String condition, List<Object> placeholderValues) throws Exception {
-		getPlaceholders().add(placeholderValues);
+	public final CaffeineChainable where(String condition, List<Object> args) throws Exception {
+		getPlaceholders().add(args);
 		return where(condition);
 	}
 
@@ -66,13 +62,13 @@ public final class CaffeineChainable {
 		return appendCondition("or", condition);
 	}
 
-	public final CaffeineChainable or(String condition, Object placeholderValue) throws Exception {
-		getPlaceholders().add(placeholderValue);
+	public final CaffeineChainable or(String condition, Object... args) throws Exception {
+		getPlaceholders().add(Arrays.asList(args));
 		return or(condition);
 	}
 
-	public final CaffeineChainable or(String condition, List<Object> placeholderValues) throws Exception {
-		getPlaceholders().add(placeholderValues);
+	public final CaffeineChainable or(String condition, List<Object> args) throws Exception {
+		getPlaceholders().add(args);
 		return or(condition);
 	}
 
