@@ -69,7 +69,7 @@ List<CaffeineObject> admins = CaffeineConnection.objectQuery("select * from user
 List<HashMap<String, Object> rawReturn = CaffeineConnection.rawQuery("select downloads.*, users.* from downloads join users on downloads.user_id = users.id where id in (1, 2, 3) order by downloads.id asc");
 ```
 
-SQL fragment with placeholder values, List of arguments, and additional options. As with any lookup in Caffeine, it must be told what class of objects to return unless calling the `rawQuery` method. `IN` syntax is also supported.
+SQL fragment with placeholder values, list of arguments (or varargs). As with any lookup in Caffeine, it must be told what class of objects to return unless calling the `rawQuery` method. `IN` syntax is also supported.
 ```
 List<Object> list = new ArrayList<Object>();
 list.add("Smith");
@@ -79,12 +79,9 @@ idArg.add(2);
 idArg.add(3);
 idArg.add(6);
 list.add(idArg);
-Map<String, Object> optionsMap = new HashMap<String, Object>();
-optionsMap.put("limit", 5);
-optionsMap.put("orderBy", "created_at desc");
 CaffeineObject.setQueryClass(User.class);
-List<CaffeineObject> smithUsers = CaffeineConnection.objectQuery("select * from users where last_name ilike ? or first_name ilike ? or id in (?)", list, optionsMap);
-// select * from users where last_name ilike 'Smith' or first_name ilike 'Bruce' or id in ( 2, 3, 6 ) order by created_at desc limit 5
+List<CaffeineObject> smithUsers = CaffeineConnection.objectQuery("select * from users where last_name ilike ? or first_name ilike ? or id in (?)", list);
+// select * from users where last_name ilike 'Smith' or first_name ilike 'Bruce' or id in ( 2, 3, 6 )
 ```
 
 PostgreSQL style named parameters can be used as well with a list or n number of arguments for either DB updates or selects. `IN` syntax is also supported.

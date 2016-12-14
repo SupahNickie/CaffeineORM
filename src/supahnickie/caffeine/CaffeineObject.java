@@ -12,14 +12,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 /**
  * CaffeineObject is the parent class of your application's model classes. It will also be the primary class
  * with which you work while using the CaffeineORM.
  * Any return object of type CaffeineObject can be cast to the appropriate concrete model class if needed.
  * 
  * @author Nicholas Case (nicholascase@live.com)
- * @version 4.1.1
+ * @version 5.0.0
+ * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/README.md">README containing examples, including initialization</a>
  */
 public class CaffeineObject {
 	static List<String> ignoredFields = new ArrayList<String>();
@@ -65,28 +65,50 @@ public class CaffeineObject {
 	}
 
 	/**
-	 * 
+	 * Invokes the CaffeineChainable class which can then be used to make ActiveRecord-like queries. This function signature
+	 * assumes that the query class has already been set. If you need to change the active query class or if it has not
+	 * been set already, pass the Class of the objects you would like to return in as an argument.
 	 * @return An instance of the CaffeineChainable class from which you can join additional queries using the 
 	 * {@code join()}, {@code where()}, and {@code or()} methods, actually running the query with {@code execute()}
+	 * @throws Exception 
+	 * @see CaffeineObject#setQueryClass(Class) setQueryClass(Class)
 	 */
-	public final static CaffeineChainable chainable() {
+	public final static CaffeineChainable chainable() throws Exception {
 		return new CaffeineChainable();
 	}
 
+	/**
+	 * Invokes the CaffeineChainable class which can then be used to make ActiveRecord-like queries. If you need to change 
+	 * the active query class or if it has not been set already, pass the Class of the 
+	 * objects you would like to return in as an argument.
+	 * @param klass	The actual class object that queries expect to use.
+	 * @return An instance of the CaffeineChainable class from which you can join additional queries using the 
+	 * {@code join()}, {@code where()}, and {@code or()} methods, actually running the query with {@code execute()}
+	 * @throws Exception 
+	 * @see CaffeineObject#setQueryClass(Class) setQueryClass(Class)
+	 */
 	@SuppressWarnings("rawtypes")
-	public final static CaffeineChainable chainable(Class klass) {
+	public final static CaffeineChainable chainable(Class klass) throws Exception {
 		CaffeineConnection.setQueryClass(klass);
 		return new CaffeineChainable();
 	}
 
 	/* AR-like CRUD */
 
+	/**
+	 * Executes an immediate find using id passed in as the lookup against the "id" column in the database.
+	 * @param klass The actual class object that Caffeine should use.
+	 * @param i The integer (or long) representing the id to look up in the current query table.
+	 * @return A CaffeineObject that can be cast to the class representing the object. An ID of 0 and other
+	 * values set to null would mean the record was not found in the database.
+	 * @throws Exception
+	 */
 	@SuppressWarnings({ "rawtypes" })
-	public static final CaffeineObject find(Class klass, int i) throws Exception {
+	public static final CaffeineObject find(Class klass, long i) throws Exception {
 		Connection c = CaffeineConnection.setup();
 		CaffeineObject newInstance = (CaffeineObject) CaffeineConnection.setQueryClass(klass).newInstance();
 		PreparedStatement ps = c.prepareStatement(CaffeineObject.baseQuery() + " where id = ?");
-		ps.setInt(1, i);
+		ps.setLong(1, i);
 		ResultSet rs = ps.executeQuery();
 		while (rs.next()) {
 			newInstance.setAttrs(rs);
@@ -97,10 +119,26 @@ public class CaffeineObject {
 		return newInstance;
 	}
 
-	public static final CaffeineObject find(int i) throws Exception {
+	/**
+	 * Executes an immediate find using id passed in as the lookup against the "id" column in the database.
+	 * This function signature expects the current query class to already be set.
+	 * @param i The integer (or long) representing the id to look up in the current query table.
+	 * @return A CaffeineObject that can be cast to the class representing the object. An ID of 0 and other
+	 * values set to null would mean the record was not found in the database.
+	 * @throws Exception
+	 */
+	public static final CaffeineObject find(long i) throws Exception {
 		return find(CaffeineConnection.getQueryClass(), i);
 	}
 
+	/**
+	 * Static version of the create function. Used when you do not have an instance in memory yet but 
+	 * would just like to create a new record.
+	 * @param klass The actual class object that Caffeine should use.
+	 * @param args A map with the keys being the database columns and the values being the attribute values to write
+	 * to the database and assign to the returned object.
+	 * @return A CaffeineObject that can be cast to the class representing the object.
+	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public final static CaffeineObject create(Class klass, Map<String, Object> args) {
 		try {
@@ -121,8 +159,11 @@ public class CaffeineObject {
 		}
 	}
 
-	/* Already have an instance in memory, just wanting to persist it to the DB */
-
+	/**
+	 * Instance version of the create function. Used when you have an instance in memory already and
+	 * would like to persist it in the database.
+	 * @return A CaffeineObject that can be cast to the class representing the object.
+	 */
 	public final CaffeineObject create() {
 		try {
 			if (validate("create")) {
@@ -141,6 +182,14 @@ public class CaffeineObject {
 		}
 	}
 
+	/**
+	 * Updates the row in the database this object represents with whatever new values it is passed in from the args.
+	 * @param args A map with the keys being the database columns and the values being the attribute values to write
+	 * to the database and assign to the returned object.
+	 * @return A CaffeineObject that can be cast to the class representing the object. If the update fails, the calling object
+	 * rolls back to its original state.
+	 * @throws Exception
+	 */
 	public final CaffeineObject update(Map<String, Object> args) throws Exception {
 		Map<String, Object> originalState = buildArgsFromCurrentInstance();
 		try {
@@ -161,8 +210,12 @@ public class CaffeineObject {
 		}
 	}
 
-	/* Already have an instance in memory, just wanting to persist changes to the DB */
-
+	/**
+	 * Updates the row in the database this object represents with whatever new values it currently has assigned to it.
+	 * @return A CaffeineObject that can be cast to the class representing the object. If the update fails, the calling object
+	 * rolls back to its original state.
+	 * @throws Exception
+	 */
 	public final CaffeineObject update() throws Exception {
 		try {
 			if (validate("update")) {
@@ -181,6 +234,10 @@ public class CaffeineObject {
 		}
 	}
 
+	/**
+	 * Deletes an instance from the database using ID as its lookup.
+	 * @return Boolean representing whether or not the record was successfully deleted.
+	 */
 	public final boolean delete() {
 		try {
 			CaffeineConnection.setQueryClass(this.getClass());
@@ -195,11 +252,30 @@ public class CaffeineObject {
 		}
 	}
 
+	/**
+	 * Fetches associated records from a given instance using relationships defined in the extending model classes.
+	 * For example, if a User has many Downloads, calling {@code user.getAssociated(Download.class)} would fetch the downloads
+	 * that belong to them using the table name of the class as the foreign key lookup (in this case, "user_id" on the Downloads table).
+	 * @param associated The class type of the records you would like to fetch.
+	 * @return A list of the requested associated records. This is always a list, even when there's only one to return.
+	 * @throws Exception
+	 * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/src/supahnickie/testClasses/User.java">Relationships defined in sample User class.</a>
+	 */
 	@SuppressWarnings("rawtypes")
 	public final List<CaffeineObject> getAssociated(Class associated) throws Exception {
 		return getAssociated(associated, null);
 	}
 
+	/**
+	 * Fetches associated records from a given instance using relationships defined in the extending model classes.
+	 * For example, if a User has many Downloads, calling {@code user.getAssociated(Download.class, "organizer_id")} would fetch the downloads
+	 * where the user's id value is that of the download's organizer_id.
+	 * @param associated The class type of the records you would like to fetch.
+	 * @param foreignKey The foreign key to use during the query.
+	 * @return A list of the requested associated records. This is always a list, even when there's only one to return.
+	 * @throws Exception
+	 * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/src/supahnickie/testClasses/User.java">Relationships defined in sample User class.</a>
+	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public final List<CaffeineObject> getAssociated(Class associated, String foreignKey) throws Exception {
 		Map<Class, String> associations = (Map<Class, String>) CaffeineConnection.setQueryClass(this.getClass()).getDeclaredField("caffeineAssociations").get(null);
@@ -236,10 +312,20 @@ public class CaffeineObject {
 		return CaffeineSQLRunner.executeQuery(sql);
 	}
 
-	/* Helper methods */
-
+	/**
+	 * Returns true if the record has been newly instantiated and is not in the database yet.
+	 * @return Boolean
+	 */
 	public boolean isNewRecord() { return this.isNewRecord; }
 
+	/**
+	 * Returns true if the object has attributes that are different from when the object was instantiated.
+	 * For example, retrieving a record from the database and calling isDirty() on it will return false, but if you
+	 * change the object's firstName attribute, this will flip to true (and back to false if you change it back to what
+	 * it started as).
+	 * @return Boolean
+	 * @throws Exception
+	 */
 	public boolean isDirty() throws Exception {
 		if (this.attrsOnInit.equals(this.buildArgsFromCurrentInstance())) { return false; }
 		return true;
@@ -292,10 +378,15 @@ public class CaffeineObject {
 		return sql;
 	}
 
-	/* validationType being either "update" or "create" */
-
+	/**
+	 * Function to be overwritten by the extending classes. Validate() is called before persisting records when
+	 * the create() or update() methods are called.
+	 * @param validationType Either "create" or "update" representing the action taken on the object.
+	 * @return Boolean depending on whether or not the record passes validation in the model class.
+	 * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/src/supahnickie/testClasses/User.java">validate() defined in the User class.</a>
+	 */
 	public boolean validate(String validationType) {
-		return false;
+		return true;
 	}
 
 	static final String baseQuery() throws Exception {
@@ -304,8 +395,12 @@ public class CaffeineObject {
 		return sql;
 	}
 
-	/* Getters */
-
+	/**
+	 * Fetches pertinent validation errors as reported in the validate() function.
+	 * @return String of validation errors that are defined in the model classes.
+	 * @throws Exception
+	 * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/src/supahnickie/testClasses/User.java">validate() and validationErrors used in sample User class.</a>
+	 */
 	public final String getValidationErrors() throws Exception {
 		return this.validationErrors;
 	}

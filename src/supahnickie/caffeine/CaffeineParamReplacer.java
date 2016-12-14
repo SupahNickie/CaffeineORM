@@ -10,6 +10,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class CaffeineParamReplacer {
+
+	private CaffeineParamReplacer() {}
+
 	static final PreparedStatement replaceNamedParameters(Connection c, String sql, List<Object> values) throws Exception {
 		PreparedStatement ps = null;
 		Pattern p = Pattern.compile("\\$\\d*");

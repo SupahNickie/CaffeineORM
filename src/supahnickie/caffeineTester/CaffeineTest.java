@@ -333,11 +333,8 @@ public class CaffeineTest {
 		List<Object> args = new ArrayList<Object>();
 		args.add("FileTest num 3");
 		args.add(6);
-		Map<String, Object> options = new HashMap<String, Object>();
-		options.put("limit", 1);
-		options.put("orderBy", "id asc");
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = CaffeineConnection.objectQuery("select * from downloads where file_file_name = ? or org_id = ?", args, options);
+		List<CaffeineObject> downloads = CaffeineConnection.objectQuery("select * from downloads where file_file_name = ? or org_id = ?", args);
 		assertEquals("size of return array should match expected return", 1, downloads.size());
 		Download download1 = (Download) downloads.get(0);
 		assertEquals("download1 file name should match seed", "FileTest num 3", download1.file_file_name);
@@ -358,31 +355,12 @@ public class CaffeineTest {
 	}
 
 	@Test
-	public void executeARlikeQueryWithOptions() throws Exception {
-		Map<String, Object> args = new HashMap<String, Object>();
-		args.put("file_file_name", "FileTest num 3");
-		args.put("org_id", 2);
-		Map<String, Object> options = new HashMap<String, Object>();
-		options.put("limit", 1);
-		options.put("orderBy", "id asc");
-		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = CaffeineConnection.query(args, options);
-		assertEquals("size of return array should match expected return", 1, downloads.size());
-		Download download1 = (Download) downloads.get(0);
-		assertEquals("download1 file name should match seed", "FileTest num 3", download1.file_file_name);
-		assertEquals("download1 org_id should match seed", 2, download1.org_id);
-	}
-
-	@Test
 	public void queryWhereNoConditionsMatch() throws Exception {
 		Map<String, Object> args = new HashMap<String, Object>();
 		args.put("file_file_name", "FileTest num 6");
 		args.put("org_id", 2);
-		Map<String, Object> options = new HashMap<String, Object>();
-		options.put("limit", 1);
-		options.put("orderBy", "id asc");
 		CaffeineObject.setQueryClass(Download.class);
-		List<CaffeineObject> downloads = CaffeineConnection.query(args, options);
+		List<CaffeineObject> downloads = CaffeineConnection.query(args);
 		assertEquals("size of return array should match expected return", 0, downloads.size());
 	}
 
