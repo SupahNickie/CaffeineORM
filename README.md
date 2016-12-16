@@ -158,7 +158,7 @@ CaffeineConnection.rawUpdate("insert into users (first_name, last_name, email) v
 CaffeineConnection.rawUpdate("insert into users (first_name, last_name, email) values ($1, $2, $3)", "Grawr", "McPhee", "something_else@example.com");
 ```
 
-Inserts, updates, and deletes can also be handled in a more AR-like format. The object `create` and `update` calls are performed on will have the inserted attributes on itself after execution.
+Inserts, updates, and deletes can also be handled in a more AR-like format. The object that `save`, `create`, and `update` calls are performed on will have the inserted attributes on itself after execution.
 ```
 Map<String, Object> createArgs = new HashMap<String, Object>();
 createArgs.put("email", "superexample@example.com");
@@ -173,6 +173,14 @@ anotherNewUser.setLastName("Skip, and a Jump");
 anotherNewUser.create();
 anotherNewUser.setRole("super");
 anotherNewUser.update();
+
+// Conversely you may also just use the save() method if you do not need to raise an exception on failure.
+// The save() function calls either create() or update() as appropriate without needing the user to specify
+// which action it should take.
+User yetAnotherNewUser = new User();
+boolean savedSuccessfully = yetAnotherNewUser.save(); // False, because nothing was saved
+yetAnotherNewUser.setSomeAttribute("some value");
+savedSuccessfully = yetAnotherNewUser.save(); // True
 
 // Oops, I misspelled his first name; let's update the user.
 createArgs.put("first_name", "Steven");

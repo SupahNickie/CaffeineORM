@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  * Functions are called one after the other until your lookup is built, then the query is called using the execute() command.
  * 
  * @author Nicholas Case (nicholascase@live.com)
- * @version 5.0.0
+ * @version 5.1.0
  * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/README.md">README containing examples</a>
  * @see <a href="https://github.com/rails/rails/tree/master/activerecord">ActiveRecord, the inspiration for this project</a>
  */
@@ -51,13 +51,13 @@ public final class CaffeineChainable {
 	 * Generates a SQL snippet used to join two tables together. More complex queries wishing to return attributes from
 	 * more than one table should make use of the rawQuery method in the CaffeineConnection class instead. A call 
 	 * of join("left outer", "users.id", "downloads.org_id") would generate the SQL "(...) left outer join downloads on 
-	 * downloads.org_id = users.id"
+	 * downloads.org_id = users.id".
+	 * See also {@link CaffeineConnection#rawQuery(String)} for more complex queries.
 	 * @param typeOfJoin Examples are "inner", "left outer", "full", etc.
 	 * @param fromJoin Table.foreignKey to use when specifying which table you're joining from. Example: "users.id"
 	 * @param toJoin Table.foreignKey to use when specifying which table you're joining to. Example: "downloads.org_id"
 	 * @return The same instance of CaffeineChainable that you may continue using to build a query with.
 	 * @throws Exception
-	 * @see {@link CaffeineConnection#rawQuery(String)} CaffeineConnection#rawQuery(String) for more complex queries
 	 */
 	public final CaffeineChainable join(String typeOfJoin, String fromJoin, String toJoin) throws Exception {
 		String[] fromJoins = fromJoin.split("\\.");
@@ -74,12 +74,12 @@ public final class CaffeineChainable {
 	 * Generates a SQL snippet used to join two tables together. More complex queries wishing to return attributes from
 	 * more than one table should make use of the rawQuery method in the CaffeineConnection class instead. A call 
 	 * of join("users.id", "downloads.org_id") would generate the SQL "(...) join downloads on 
-	 * downloads.org_id = users.id"
+	 * downloads.org_id = users.id".
+	 * See also {@link CaffeineConnection#rawQuery(String)} for more complex queries.
 	 * @param fromJoin Table.foreignKey to use when specifying which table you're joining from. Example: "users.id"
 	 * @param toJoin Table.foreignKey to use when specifying which table you're joining to. Example: "downloads.org_id"
 	 * @return The same instance of CaffeineChainable that you may continue using to build a query with.
 	 * @throws Exception
-	 * @see {@link CaffeineConnection#rawQuery(String)} CaffeineConnection#rawQuery(String) for more complex queries
 	 */
 	public final CaffeineChainable join(String fromJoin, String toJoin) throws Exception {
 		return join("", fromJoin, toJoin);

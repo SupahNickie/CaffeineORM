@@ -18,7 +18,7 @@ import java.util.Map;
  * Any return object of type CaffeineObject can be cast to the appropriate concrete model class if needed.
  * 
  * @author Nicholas Case (nicholascase@live.com)
- * @version 5.0.0
+ * @version 5.1.0
  * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/README.md">README containing examples, including initialization</a>
  */
 public class CaffeineObject {
@@ -132,15 +132,43 @@ public class CaffeineObject {
 	}
 
 	/**
+	 * Executes either a create action on a new record or an update action on an existing, but changed record.
+	 * The save() function calls either create() or update() as appropriate without needing the user to specify
+	 * which action it should take.
+	 * @return Boolean representing whether or not the record has been saved successfully into the database.
+	 * @throws Exception
+	 */
+	public final boolean save() throws Exception {
+		boolean saveSuccessful = false;
+		if (this.isNewRecord() && this.isDirty()) {
+			try {
+				this.create();
+				saveSuccessful = true;
+			} catch (Exception e) {
+				saveSuccessful = false;
+			}
+		} else if (!this.isNewRecord && this.isDirty()) {
+			try {
+				this.update();
+				saveSuccessful = true;
+			} catch (Exception e) {
+				saveSuccessful = false;
+			}
+		}
+		return saveSuccessful;
+	}
+
+	/**
 	 * Static version of the create function. Used when you do not have an instance in memory yet but 
 	 * would just like to create a new record.
 	 * @param klass The actual class object that Caffeine should use.
 	 * @param args A map with the keys being the database columns and the values being the attribute values to write
 	 * to the database and assign to the returned object.
 	 * @return A CaffeineObject that can be cast to the class representing the object.
+	 * @throws Exception
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public final static CaffeineObject create(Class klass, Map<String, Object> args) {
+	public final static CaffeineObject create(Class klass, Map<String, Object> args) throws Exception {
 		try {
 			CaffeineConnection.setQueryClass(klass);
 			CaffeineObject newInstance = (CaffeineObject) klass.newInstance();
@@ -150,12 +178,10 @@ public class CaffeineObject {
 				String sql = insertInsertPlaceholders(args, argKeys);
 				return CaffeineSQLRunner.executeUpdate(sql, args, argKeys, (CaffeineObject) klass.newInstance());
 			} else {
-				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
-				return null;
+				throw new Exception("Failed validation; please run the 'getValidationErrors()' method to see errors.");
 			}
 		} catch (Exception e) {
-			System.out.println(e);
-			return null;
+			throw e;
 		}
 	}
 
@@ -163,8 +189,9 @@ public class CaffeineObject {
 	 * Instance version of the create function. Used when you have an instance in memory already and
 	 * would like to persist it in the database.
 	 * @return A CaffeineObject that can be cast to the class representing the object.
+	 * @throws Exception
 	 */
-	public final CaffeineObject create() {
+	public final CaffeineObject create() throws Exception {
 		try {
 			if (validate("create")) {
 				CaffeineConnection.setQueryClass(this.getClass());
@@ -173,12 +200,10 @@ public class CaffeineObject {
 				String sql = insertInsertPlaceholders(args, argKeys);
 				return CaffeineSQLRunner.executeUpdate(sql, args, argKeys, this);
 			} else {
-				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
-				return null;
+				throw new Exception("Failed validation; please run the 'getValidationErrors()' method to see errors.");
 			}
 		} catch (Exception e) {
-			System.out.println(e);
-			return null;
+			throw e;
 		}
 	}
 
@@ -201,12 +226,10 @@ public class CaffeineObject {
 				return CaffeineSQLRunner.executeUpdate(sql, args, argKeys, this);
 			} else {
 				this.assignMapArgsToInstance(originalState);
-				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
-				return null;
+				throw new Exception("Failed validation; please run the 'getValidationErrors()' method to see errors.");
 			}
 		} catch (Exception e) {
-			System.out.println(e);
-			return null;
+			throw e;
 		}
 	}
 
@@ -225,12 +248,10 @@ public class CaffeineObject {
 				String sql = insertUpdatePlaceholders(args, argKeys);
 				return CaffeineSQLRunner.executeUpdate(sql, args, argKeys, this);
 			} else {
-				System.out.println("Failed validation; please run the 'getValidationErrors()' method to see errors.");
-				return null;
+				throw new Exception("Failed validation; please run the 'getValidationErrors()' method to see errors.");
 			}
 		} catch (Exception e) {
-			System.out.println(e);
-			return null;
+			throw e;
 		}
 	}
 

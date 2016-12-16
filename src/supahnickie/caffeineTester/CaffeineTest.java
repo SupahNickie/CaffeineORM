@@ -395,6 +395,66 @@ public class CaffeineTest {
 	}
 
 	@Test
+	public void saveCreate() throws Exception {
+		User user = new User();
+		CaffeineObject.setQueryClass(User.class);
+		boolean output = user.save();
+		assertEquals("user.save() should not be successful", false, output);
+		List<CaffeineObject> allUsers = CaffeineConnection.objectQuery("select * from users");
+		assertEquals("count of users should not be greater than seeded", 3, allUsers.size());
+		user.setFirstName("Grawr");
+		output = user.save();
+		assertEquals("user.save() should be successful", true, output);
+		allUsers = CaffeineConnection.objectQuery("select * from users order by id desc");
+		assertEquals("count of users should be greater than seeded", 4, allUsers.size());
+		User newUser = (User) allUsers.get(0);
+		assertEquals("attributes should be persisted", "Grawr", newUser.getFirstName());
+	}
+
+	@Test
+	public void saveCreateFailedValidation() throws Exception {
+		User user = new User();
+		CaffeineObject.setQueryClass(User.class);
+		user.setFirstName("illegal first name");
+		boolean output = user.save();
+		assertEquals("user.save() should not be successful", false, output);
+		List<CaffeineObject> allUsers = CaffeineConnection.objectQuery("select * from users order by id desc");
+		assertEquals("count of users should not be greater than seeded", 3, allUsers.size());
+	}
+
+	@Test
+	public void saveUpdate() throws Exception {
+		User user = (User) CaffeineObject.find(User.class, 2);
+		boolean output = user.save();
+		assertEquals("user.save() should not be successful", false, output);
+		List<CaffeineObject> allUsers = CaffeineConnection.objectQuery("select * from users");
+		assertEquals("count of users should not be greater than seeded", 3, allUsers.size());
+		user.setFirstName("Grawr");
+		output = user.save();
+		assertEquals("user.save() should be successful", true, output);
+		allUsers = CaffeineConnection.objectQuery("select * from users order by id desc");
+		assertEquals("count of users should not be greater than seeded", 3, allUsers.size());
+		User updatedUser = (User) allUsers.get(1);
+		assertEquals("attributes should be persisted", "Grawr", updatedUser.getFirstName());
+	}
+
+	@Test
+	public void saveUpdateFailedValidation() throws Exception {
+		User user = (User) CaffeineObject.find(User.class, 2);
+		boolean output = user.save();
+		assertEquals("user.save() should not be successful", false, output);
+		List<CaffeineObject> allUsers = CaffeineConnection.objectQuery("select * from users");
+		assertEquals("count of users should not be greater than seeded", 3, allUsers.size());
+		user.setLastName("another illegal name");
+		output = user.save();
+		assertEquals("user.save() should not be successful", false, output);
+		allUsers = CaffeineConnection.objectQuery("select * from users order by id desc");
+		assertEquals("count of users should not be greater than seeded", 3, allUsers.size());
+		User updatedUser = (User) allUsers.get(1);
+		assertEquals("attributes should not be changed from what's in the database", "Case", updatedUser.getLastName());
+	}
+
+	@Test
 	public void create() throws Exception {
 		Map<String, Object> args = new HashMap<String, Object>();
 		args.put("first_name", "Superman");
@@ -409,7 +469,7 @@ public class CaffeineTest {
 		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.getLastName());
 	}
 
-	@Test
+	@Test(expected = Exception.class)
 	public void createNotPassingValidations() throws Exception {
 		Map<String, Object> args = new HashMap<String, Object>();
 		args.put("first_name", "illegal first name");
@@ -437,7 +497,7 @@ public class CaffeineTest {
 		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.getLastName());
 	}
 
-	@Test
+	@Test(expected = Exception.class)
 	public void createFromInstanceNotPassingValidations() throws Exception {
 		User newUser = new User();
 		newUser.setFirstName("illegal first name");
@@ -486,7 +546,7 @@ public class CaffeineTest {
 		assertEquals("last name should match what was put in the args", "is not as cool as a flawed hero", dbUser.getLastName());
 	}
 
-	@Test
+	@Test(expected = Exception.class)
 	public void updateChangesWithNoArgsFailingValidations() throws Exception {
 		User user = (User) CaffeineObject.find(User.class, 2);
 		assertEquals("id should be what's in the db", 2, user.getId());
@@ -504,7 +564,7 @@ public class CaffeineTest {
 		assertEquals("last name should not have been updated in the db", "Case", dbUser.getLastName());
 	}
 
-	@Test
+	@Test(expected = Exception.class)
 	public void updateNotPassingValidations() throws Exception {
 		Map<String, Object> args = new HashMap<String, Object>();
 		args.put("first_name", "Superman");
