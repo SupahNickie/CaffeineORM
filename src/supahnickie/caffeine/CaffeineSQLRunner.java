@@ -19,7 +19,6 @@ final class CaffeineSQLRunner {
 	static final void executeUpdate(Connection c, PreparedStatement ps) throws Exception {
 		ps.executeUpdate();
 		c.commit();
-		c.close();
 		ps.close();
 		CaffeineConnection.teardown();
 	}
@@ -30,7 +29,6 @@ final class CaffeineSQLRunner {
 		instance.setAttrsFromSqlReturn(ps.getGeneratedKeys());
 		instance.setIsNewRecord(false);
 		instance.captureCurrentStateOfAttrs();
-		c.close();
 		ps.close();
 		CaffeineConnection.teardown();
 		return instance;

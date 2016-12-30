@@ -93,9 +93,10 @@ public final class CaffeineConnection {
 	static final void teardown() {
 		try {
 			connection.close();
-			connection = null;
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			connection = null;
 		}
 	}
 
