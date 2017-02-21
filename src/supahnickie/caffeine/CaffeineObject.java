@@ -3,7 +3,6 @@ package supahnickie.caffeine;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -18,7 +17,7 @@ import java.util.Map;
  * Any return object of type CaffeineObject can be cast to the appropriate concrete model class if needed.
  * 
  * @author Nicholas Case (nicholascase@live.com)
- * @version 5.1.0
+ * @version 5.2.0
  * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/README.md">README containing examples, including initialization</a>
  */
 public class CaffeineObject {
@@ -105,9 +104,9 @@ public class CaffeineObject {
 	 */
 	@SuppressWarnings({ "rawtypes" })
 	public static final CaffeineObject find(Class klass, long i) throws Exception {
-		Connection c = CaffeineConnection.setup();
+		CaffeinePooledConnection c = CaffeineConnection.setup();
 		CaffeineObject newInstance = (CaffeineObject) CaffeineConnection.setQueryClass(klass).newInstance();
-		PreparedStatement ps = c.prepareStatement(CaffeineObject.baseQuery() + " where id = ?");
+		PreparedStatement ps = c.getConnection().prepareStatement(CaffeineObject.baseQuery() + " where id = ?");
 		ps.setLong(1, i);
 		ResultSet rs = ps.executeQuery();
 		while (rs.next()) {
@@ -115,7 +114,7 @@ public class CaffeineObject {
 		}
 		newInstance.captureCurrentStateOfAttrs();
 		newInstance.setIsNewRecord(false);
-		CaffeineConnection.teardown(rs, ps);
+		CaffeineConnection.teardown(c, rs, ps);
 		return newInstance;
 	}
 

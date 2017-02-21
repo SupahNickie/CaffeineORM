@@ -3,11 +3,12 @@ package supahnickie.caffeineTester;
 import static org.junit.Assert.*;
 
 import org.junit.*;
-import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import supahnickie.caffeine.*;
 import supahnickie.testClasses.*;
 
@@ -34,6 +35,53 @@ public class CaffeineTest {
 		assertArrayEquals("first names from first database should match expected", new String[] { "Grawr", "Nick", "Test" }, new String[] { user1.getFirstName(), user2.getFirstName(), user3.getFirstName() });
 		assertArrayEquals("first names from second database should match expected", new String[] { "Saint", "Easter", "Freddy" }, new String[] { user4.getFirstName(), user5.getFirstName(), user6.getFirstName() });
 		assertArrayEquals("first names from third database should match expected", new String[] { "Oliver", "Thomas", "Tiger" }, new String[] { user7.getFirstName(), user8.getFirstName(), user9.getFirstName() });
+	}
+
+	@Test
+	public void connectionPooling() throws Exception {
+		List<HashMap<String, Object>> output = new ArrayList<HashMap<String, Object>>();
+		Runnable task1 = () -> {
+			try {
+				output.addAll(CaffeineConnection.rawQuery("select downloads.*, users.* from downloads join users on downloads.user_id = users.id where downloads.id in (1, 2, 3) order by downloads.id asc"));
+			} catch (Exception e) {
+				// Do nothing
+			}
+		};
+		Runnable task2 = () -> {
+			try {
+				output.addAll(CaffeineConnection.rawQuery("select downloads.*, users.* from downloads join users on downloads.user_id = users.id where downloads.id = 4"));
+			} catch (Exception e) {
+				// Do nothing
+			}
+		};
+		Runnable task3 = () -> {
+			try {
+				output.addAll(CaffeineConnection.rawQuery("select downloads.*, users.* from downloads join users on downloads.user_id = users.id where downloads.id in (1, 2, 3) order by downloads.id asc"));
+			} catch (Exception e) {
+				// Do nothing
+			}
+		};
+		Runnable task4 = () -> {
+			try {
+				output.addAll(CaffeineConnection.rawQuery("select downloads.*, users.* from downloads join users on downloads.user_id = users.id where downloads.id = 4"));
+			} catch (Exception e) {
+				// Do nothing
+			}
+		};
+		Runnable task5 = () -> {
+			try {
+				output.addAll(CaffeineConnection.rawQuery("select downloads.*, users.* from downloads join users on downloads.user_id = users.id where downloads.id in (1, 2, 3) order by downloads.id asc"));
+			} catch (Exception e) {
+				// Do nothing
+			}
+		};
+		task1.run();
+		task2.run();
+		task3.run();
+		task4.run();
+		task5.run();
+		TimeUnit.SECONDS.sleep(3);
+		assertEquals("size of return should match expected", 11, output.size());
 	}
 
 	@Test
@@ -873,9 +921,9 @@ public class CaffeineTest {
 	@Before
 	public void setUp() throws Exception {
 		// The database must already exist, but should be blank otherwise.
-		CaffeineConnection.addDatabaseConnection("primary", System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL"), System.getenv("CAFFEINE_DB_USER"), System.getenv("CAFFEINE_DB_PASSWORD"));
-		CaffeineConnection.addDatabaseConnection("secondary", System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL_2"), System.getenv("CAFFEINE_DB_USER"), System.getenv("CAFFEINE_DB_PASSWORD"));
-		CaffeineConnection.addDatabaseConnection("tertiary", System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL_3"), System.getenv("CAFFEINE_DB_USER"), System.getenv("CAFFEINE_DB_PASSWORD"));
+		CaffeineConnection.addDatabaseConnection("primary", System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL"), System.getenv("CAFFEINE_DB_USER"), System.getenv("CAFFEINE_DB_PASSWORD"), 4);
+		CaffeineConnection.addDatabaseConnection("secondary", System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL_2"), System.getenv("CAFFEINE_DB_USER"), System.getenv("CAFFEINE_DB_PASSWORD"), 4);
+		CaffeineConnection.addDatabaseConnection("tertiary", System.getenv("CAFFEINE_DB_DRIVER"), System.getenv("CAFFEINE_DB_TEST_URL_3"), System.getenv("CAFFEINE_DB_USER"), System.getenv("CAFFEINE_DB_PASSWORD"), 4);
 		insertTables();
 		insertUsers();
 		insertDownloads();
@@ -887,6 +935,7 @@ public class CaffeineTest {
 		CaffeineConnection.useDatabase("primary");
 		CaffeineConnection.rawUpdate("drop table if exists users");
 		CaffeineConnection.rawUpdate("drop table if exists downloads");
+		CaffeineConnection.destroyConnectionPools();
 	}
 
 	public void insertTables() throws Exception {

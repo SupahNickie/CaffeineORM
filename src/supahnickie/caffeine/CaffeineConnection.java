@@ -1,31 +1,29 @@
 package supahnickie.caffeine;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 /**
  * CaffeineConnection is the connection handler and can also be used to run direct SQL queries/updates. All configuration
  * must be properly set before any queries can be run.
  * 
  * @author Nicholas Case (nicholascase@live.com)
- * @version 5.1.0
+ * @version 5.2.0
  * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/README.md">README containing examples, including initialization</a>
  */
 public final class CaffeineConnection {
 	@SuppressWarnings("rawtypes")
 	private static Class currentQueryClass;
-	private static String dbDriver;
-	private static String dbUrl;
-	private static String dbUsername;
-	private static String dbPassword;
-	private static Connection connection;
-	private static Map<String, String[]> connectionCredentials = new HashMap<String, String[]>();
+	private static String currentDb;
+	private static Map<String, Integer> connectionIndices = new HashMap<String, Integer>();
+	private static Map<String, CaffeinePooledConnection[]> connectionPool = new HashMap<String, CaffeinePooledConnection[]>();
+	private static Map<String, Object[]> connectionCredentials = new HashMap<String, Object[]>();
 
 	private CaffeineConnection() {}
 
@@ -55,11 +53,7 @@ public final class CaffeineConnection {
 		if ( !(connectionCredentials.containsKey(name)) ) {
 			throw new Exception("database " + name + " has not been added to the list of databases yet; use the 'addDatabaseConnection' method");
 		}
-		String[] creds = connectionCredentials.get(name);
-		dbDriver = creds[0];
-		dbUrl = creds[1];
-		dbUsername = creds[2];
-		dbPassword = creds[3];
+		currentDb = name;
 	}
 
 	/**
@@ -71,39 +65,88 @@ public final class CaffeineConnection {
 	 * @param url The url to connect to the database 
 	 * @param username Username string
 	 * @param password Password string
+	 * @param concurrency Number of open connections to maintain to database
 	 */
-	public static final void addDatabaseConnection(String name, String driver, String url, String username, String password) {
-		String[] creds = new String[] { driver, url, username, password };
+	public static final void addDatabaseConnection(String name, String driver, String url, String username, String password, Integer concurrency) {
+		Object[] creds = new Object[] { driver, url, username, password, concurrency };
 		connectionCredentials.put(name, creds);
+		connectionIndices.put(name, 0);
+		setupConnectionPool(name, creds, concurrency);
 	}
 
-	static final Connection setup() {
-		connection = null;
-		try {
-			Class.forName(dbDriver);
-			connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-			connection.setAutoCommit(false);
-			return connection;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+	private static final void setupConnectionPool(String name, Object[] creds, int concurrency) {
+		CaffeinePooledConnection[] connections = new CaffeinePooledConnection[concurrency];
+		for (int i = 0; i < concurrency; i++) {
+			connections[i] = fetchNewConnection(creds);
 		}
+		connectionPool.put(name, connections);
 	}
 
-	static final void teardown() {
-		try {
-			connection.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			connection = null;
+	static final CaffeinePooledConnection setup() throws Exception {
+		int maxConcurrency = (int) connectionCredentials.get(currentDb)[4];
+		int idx = connectionIndices.get(currentDb);
+		CaffeinePooledConnection connection = connectionPool.get(currentDb)[idx];
+		if (!connection.getConnection().isValid(2)) {
+			CaffeinePooledConnection newConnection = new CaffeinePooledConnection(connectionCredentials.get(currentDb));
+			connectionPool.get(currentDb)[idx] = null;
+			connectionPool.get(currentDb)[idx] = newConnection;			
 		}
+		while (connection.isBusy()) {
+			TimeUnit.MILLISECONDS.sleep(ThreadLocalRandom.current().nextInt(3, 8) * 50);
+			int newIdx = setIndex(idx, maxConcurrency);
+			connectionIndices.put(currentDb, newIdx);
+			connection = connectionPool.get(currentDb)[newIdx];
+		}
+		connection.setIsBusy(true);
+		return connection;
 	}
 
-	static final void teardown(ResultSet rs, PreparedStatement ps) throws Exception {
+	static final int setIndex(int current, int max) {
+		current++;
+		if (current >= max) { current = 0; }
+		return current;
+	}
+
+	static final CaffeinePooledConnection fetchNewConnection(Object[] creds) {
+		return new CaffeinePooledConnection(creds);
+	}
+
+	static final void teardown(CaffeinePooledConnection connection) {
+		connection.setIsBusy(false);
+	}
+
+	static final void teardown(CaffeinePooledConnection connection, ResultSet rs, PreparedStatement ps) throws Exception {
 		rs.close();
 		ps.close();
-		teardown();
+		teardown(connection);
+	}
+
+	/**
+	 * Closes all connections for all databases.
+	 * @throws Exception
+	 */
+	public static final void destroyConnectionPools() throws Exception {
+		for (String name : connectionPool.keySet()) {
+			destroyConnectionPool(name);
+		}
+	}
+
+	/**
+	 * Closes all connections for a specific database.
+	 * @param dbName User-assigned alias for the database that should have the connection pool destroyed.
+	 * @throws Exception
+	 */
+	public static final void destroyConnectionPool(String dbName) throws Exception {
+		CaffeinePooledConnection[] pool = connectionPool.get(dbName);
+		for (CaffeinePooledConnection c : pool) {
+			try {
+				c.getConnection().close();
+			} catch (Exception e) {
+				System.out.println(e);
+			} finally {
+				c = null;
+			}
+		}
 	}
 
 	@SuppressWarnings("rawtypes")

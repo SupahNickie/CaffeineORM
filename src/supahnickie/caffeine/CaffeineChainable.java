@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  * Functions are called one after the other until your lookup is built, then the query is called using the execute() command.
  * 
  * @author Nicholas Case (nicholascase@live.com)
- * @version 5.1.0
+ * @version 5.2.0
  * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/README.md">README containing examples</a>
  * @see <a href="https://github.com/rails/rails/tree/master/activerecord">ActiveRecord, the inspiration for this project</a>
  */
@@ -33,7 +33,8 @@ public final class CaffeineChainable {
 	@SuppressWarnings("unchecked")
 	public final List<CaffeineObject> execute() throws Exception {
 		String sql = getCurrentQuery();
-		PreparedStatement ps = CaffeineConnection.setup().prepareStatement(sql);
+		CaffeinePooledConnection conn = CaffeineConnection.setup();
+		PreparedStatement ps = conn.getConnection().prepareStatement(sql);
 		int counter = 1;
 		for (int i = 0; i < getPlaceholders().size(); i++) {
 			List<Object> arrayArgs = (List<Object>) getPlaceholders().get(i);
@@ -42,7 +43,7 @@ public final class CaffeineChainable {
 				counter++;
 			}
 		}
-		List<CaffeineObject> results = CaffeineSQLRunner.executeQuery(ps);
+		List<CaffeineObject> results = CaffeineSQLRunner.executeQuery(conn, ps);
 		resetQueryState();
 		return results;
 	}
