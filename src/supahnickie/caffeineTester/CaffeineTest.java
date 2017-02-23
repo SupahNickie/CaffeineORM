@@ -4,6 +4,9 @@ import static org.junit.Assert.*;
 
 import org.junit.*;
 import java.util.concurrent.TimeUnit;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -82,6 +85,28 @@ public class CaffeineTest {
 		task5.run();
 		TimeUnit.SECONDS.sleep(3);
 		assertEquals("size of return should match expected", 11, output.size());
+	}
+
+	@Test
+	public void userSuppliedPreparedStatement() throws Exception {
+		CaffeinePooledConnection conn = CaffeineConnection.setup();
+		PreparedStatement ps = conn.prepareStatement("select * from users where id = ?");
+		ps.setInt(1, 2);
+		ResultSet rs = ps.executeQuery();
+		ResultSetMetaData rsmd = rs.getMetaData();
+		int numOfCol = rsmd.getColumnCount();
+		Map<Object, Object> output = new HashMap<Object, Object>();
+		while (rs.next()) {
+			for (int i = 1; i <= numOfCol; i++) {
+				output.put(rsmd.getColumnName(i), rs.getObject(i));
+			}
+		}
+		rs.close();
+		ps.close();
+		CaffeineConnection.teardown(conn);
+		assertEquals("result's first name should match expected", "Nick", output.get("first_name"));
+		assertEquals("result's last name should match expected", "Case", output.get("last_name"));
+		assertEquals("result's id should match expected", 2, output.get("id"));
 	}
 
 	@Test

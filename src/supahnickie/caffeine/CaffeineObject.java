@@ -17,7 +17,7 @@ import java.util.Map;
  * Any return object of type CaffeineObject can be cast to the appropriate concrete model class if needed.
  * 
  * @author Nicholas Case (nicholascase@live.com)
- * @version 5.2.0
+ * @version 5.3.0
  * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/README.md">README containing examples, including initialization</a>
  */
 public class CaffeineObject {

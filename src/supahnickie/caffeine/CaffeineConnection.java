@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  * must be properly set before any queries can be run.
  * 
  * @author Nicholas Case (nicholascase@live.com)
- * @version 5.2.0
+ * @version 5.3.0
  * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/README.md">README containing examples, including initialization</a>
  */
 public final class CaffeineConnection {
@@ -82,7 +82,12 @@ public final class CaffeineConnection {
 		connectionPool.put(name, connections);
 	}
 
-	static final CaffeinePooledConnection setup() throws Exception {
+	/**
+	 * Method that returns a Connection object upon which a user is able to use Prepared Statements against if they wish.
+	 * @return CaffeinePooledConnection object that will stay open and out of the connection pool until the user manually releases it with the teardown() method.
+	 * @throws Exception
+	 */
+	public static final CaffeinePooledConnection setup() throws Exception {
 		int maxConcurrency = (int) connectionCredentials.get(currentDb)[4];
 		int idx = connectionIndices.get(currentDb);
 		CaffeinePooledConnection connection = connectionPool.get(currentDb)[idx];
@@ -111,7 +116,11 @@ public final class CaffeineConnection {
 		return new CaffeinePooledConnection(creds);
 	}
 
-	static final void teardown(CaffeinePooledConnection connection) {
+	/**
+	 * Releases an open CaffeinePooledConnection object back to the DB connection pool, allowing other queries to be executed with its resources.
+	 * @param connection CaffeinePooledConnection object to release back to the DB connection pool.
+	 */
+	public static final void teardown(CaffeinePooledConnection connection) {
 		connection.setIsBusy(false);
 	}
 

@@ -16,6 +16,17 @@ CaffeineConnection.addDatabase("tertiary", driver, url, username, password, conn
 CaffeineConnection.useDatabase("tertiary");
 ```
 
+Users who wish to use PreparedStatements and keep a connection active for reuse can do so as well using a couple simple methods within the CaffeineORM. Connections are returned back to the pool when the `.teardown()` method is called on the CaffeinePooledConnection object.
+```
+CaffeinePooledConnection conn = CaffeineConnection.setup();
+PreparedStatement ps = conn.prepareStatement("select * from users where id = ?");
+ps.setInt(1, 2);
+ResultSet rs = ps.executeQuery();
+rs.close();
+ps.close();
+CaffeineConnection.teardown(conn);
+```
+
 Model classes that extend the CaffeineObject type must also call `init()` at the tail end of their constructor methods. Please see either the User or Download example classes for example usage. 
 #### Usage
 
