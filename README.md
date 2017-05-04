@@ -27,7 +27,7 @@ ps.close();
 CaffeineConnection.teardown(conn);
 ```
 
-Model classes that extend the CaffeineObject type must also call `init()` at the tail end of their constructor methods. Please see either the User or Download example classes for example usage. 
+Model classes that extend the CaffeineObject type must also call `init()` at the tail end of their constructor methods. Please see either the User or Download example classes for example usage.
 #### Usage
 
 Queries are done through the CaffeineObject abstract type; a lookup class must be declared in order to perform queries. This field is static on the CaffeineConnection parent class and must be set manually whenever there is a change in the class you would like to lookup.
@@ -205,4 +205,4 @@ Validations are handled with a handle into the `validate` abstract method on the
 
 #### Tests
 
-Tests are located in the supahnickie.caffeineTester package. To run the tests for yourself, create a blank test database and assign it to the `CAFFEINE_DB_TEST_URL` environment variable. Other environment variables needed to run the tests are `CAFFEINE_DB_DRIVER`, `CAFFEINE_DB_USERNAME`, and `CAFFEINE_DB_PASSWORD`.
+Tests are located in the supahnickie.caffeineTester package. To run the tests for yourself, create 3 blank test databases and assign them to the `CAFFEINE_DB_TEST_URL`, `CAFFEINE_DB_TEST_URL_2`, and `CAFFEINE_DB_TEST_URL_3` environment variables (example value being `jdbc:postgresql://localhost:5432/{name of database}`). Other environment variables needed to run the tests are `CAFFEINE_DB_DRIVER`, `CAFFEINE_DB_USERNAME`, and `CAFFEINE_DB_PASSWORD`.
