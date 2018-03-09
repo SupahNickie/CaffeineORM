@@ -9,7 +9,7 @@ import java.sql.PreparedStatement;
  * the methods are public to allow a user to generate reusable PreparedStatements.
  *
  * @author Nicholas Case (nicholascase@live.com)
- * @version 5.3.0
+ * @version 1.0.0
  * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/README.md">README containing examples, including initialization</a>
  */
 public final class CaffeinePooledConnection {

@@ -48,6 +48,12 @@ final class CaffeineSQLRunner {
 		executeUpdate(sql, Arrays.asList(args));
 	}
 
+	static final void executeUpdate(String sql, Map<String, Object> args) throws Exception {
+		CaffeinePooledConnection c = CaffeineConnection.setup();
+		PreparedStatement ps = CaffeineParamReplacer.replaceExactNamedParameters(c.getConnection(), sql, args);
+		executeUpdate(c, ps);
+	}
+
 	static final CaffeineObject executeUpdate(String sql, Map<String, Object> args, List<Object> argKeys, CaffeineObject instance) throws Exception {
 		CaffeinePooledConnection c = CaffeineConnection.setup();
 		PreparedStatement ps = c.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -78,6 +84,12 @@ final class CaffeineSQLRunner {
 
 	static final List<HashMap<String, Object>> executeComplexQuery(String sql, Object... args) throws Exception {
 		return executeComplexQuery(sql, Arrays.asList(args));
+	}
+
+	static final List<HashMap<String, Object>> executeComplexQuery(String sql, Map<String, Object> args) throws Exception {
+		CaffeinePooledConnection c = CaffeineConnection.setup();
+		PreparedStatement ps = CaffeineParamReplacer.replaceExactNamedParameters(c.getConnection(), sql, args);
+		return executeComplexQuery(c, ps);
 	}
 
 	static final List<CaffeineObject> executeQuery(CaffeinePooledConnection c, PreparedStatement ps) throws Exception {

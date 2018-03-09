@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  * must be properly set before any queries can be run.
  * 
  * @author Nicholas Case (nicholascase@live.com)
- * @version 5.3.0
+ * @version 1.0.0
  * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/README.md">README containing examples, including initialization</a>
  */
 public final class CaffeineConnection {
@@ -201,6 +201,17 @@ public final class CaffeineConnection {
 	public static final void rawUpdate(String sql, Object... args) throws Exception { CaffeineSQLRunner.executeUpdate(sql, args); }
 
 	/**
+	 * Function to perform a raw SQL update to the database. This version of the function signature expects
+	 * exact named parameters (":my_string") to be used. This function should only be
+	 * used for INSERT, UPDATE, or DELETE actions.
+	 * @param sql Raw SQL to execute (with placeholders)
+	 * @param args Map<String, Object> with the key being the exact string in the query to replace with the value provided as the value in the input map
+	 * @throws Exception
+	 * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/README.md">README containing examples</a>
+	 */
+	public static final void rawUpdate(String sql, Map<String, Object> args) throws Exception { CaffeineSQLRunner.executeUpdate(sql, args); }
+
+	/**
 	 * Function to perform a raw SQL query of the database. All the rawQuery functions are not required to have the query class set
 	 * because they return a raw List of HashMaps containing the attributes in a String, Object pairing. This function is particularly
 	 * useful when doing more complex SQL queries (such as returning attributes from two or more tables or aggregate functions).
@@ -236,6 +247,19 @@ public final class CaffeineConnection {
 	 * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/README.md">README containing examples</a>
 	 */
 	public static final List<HashMap<String, Object>> rawQuery(String sql, Object... args) throws Exception { return CaffeineSQLRunner.executeComplexQuery(sql, args); }
+
+	/**
+	 * Function to perform a raw SQL query of the database. All the rawQuery functions are not required to have the query class set
+	 * because they return a raw List of HashMaps containing the attributes in a String, Object pairing. This function is particularly
+	 * useful when doing more complex SQL queries (such as returning attributes from two or more tables or aggregate functions).
+	 * This version of the function signature expects exact named parameters (":my_string") to be used.
+	 * @param sql Raw SQL to execute (with placeholders)
+	 * @param args Map<String, Object> with the key being the exact string in the query to replace with the value provided as the value in the input map
+	 * @return List of records not tied to a specific model, with keys being columns and values being data fields returned from the query.
+	 * @throws Exception
+	 * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/README.md">README containing examples</a>
+	 */
+	public static final List<HashMap<String, Object>> rawQuery(String sql, Map<String, Object> args) throws Exception { return CaffeineSQLRunner.executeComplexQuery(sql, args); }
 
 	/**
 	 * Function to perform a raw SQL query of the database that is coerced into a CaffeineObject abstract type. The query class
