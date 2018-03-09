@@ -1,4 +1,5 @@
 /bin
 .classpath
+.settings
 .project
 /src/supahnickie/testClasses/Tester.java
