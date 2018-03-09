@@ -176,6 +176,24 @@ public class CaffeineTest {
 	}
 
 	@Test
+	public void rawQueryRawDataExactNamedParameters() throws Exception {
+		Map<String, Object> args = new HashMap<String, Object>();
+		List<Integer> idList = new ArrayList<Integer>();
+		idList.add(1);
+		idList.add(3);
+		args.put(":id_placeholder", idList);
+		args.put(":name_placeholder", "Nick");
+		List<HashMap<String, Object>> rawReturn = CaffeineConnection.rawQuery("select * from users where first_name = :name_placeholder or id in (:id_placeholder) or last_name = :name_placeholder order by id asc", args);
+		assertEquals("size of return should match expected", 3, rawReturn.size());
+		Map<String, Object> returnAttrs1 = rawReturn.get(0);
+		Map<String, Object> returnAttrs2 = rawReturn.get(1);
+		Map<String, Object> returnAttrs3 = rawReturn.get(2);
+		assertArrayEquals("user attributes should match expected", new Object[] {"Grawr", "McPhee", 1}, new Object[] {returnAttrs1.get("first_name"), returnAttrs1.get("last_name"), returnAttrs1.get("id")});
+		assertArrayEquals("user attributes should match expected", new Object[] {"Nick", "Case", 2}, new Object[] {returnAttrs2.get("first_name"), returnAttrs2.get("last_name"), returnAttrs2.get("id")});
+		assertArrayEquals("user attributes should match expected", new Object[] {"Test", "User", 3}, new Object[] {returnAttrs3.get("first_name"), returnAttrs3.get("last_name"), returnAttrs3.get("id")});
+	}
+
+	@Test
 	public void rawUpdateWithNamedParameters() throws Exception {
 		List<Object> args = new ArrayList<Object>();
 		args.add(6);
@@ -190,6 +208,18 @@ public class CaffeineTest {
 	@Test
 	public void rawUpdateWithUnstructuredNamedParameters() throws Exception {
 		CaffeineConnection.rawUpdate("insert into users (first_name, id, sign_in_count) values ($2, $1, $1)", 6, "McPhee");
+		User user = (User) CaffeineObject.find(User.class, 6);
+		assertEquals("id should match $1 arg", 6, user.getId());
+		assertEquals("sign_in_count should match $1 arg", 6, user.getSignInCount());
+		assertEquals("first_name should match $2 arg", "McPhee", user.getFirstName());
+	}
+
+	@Test
+	public void rawUpdateWithExactNamedParameters() throws Exception {
+		Map<String, Object> args = new HashMap<String, Object>();
+		args.put(":first", 6);
+		args.put(":second", "McPhee");
+		CaffeineConnection.rawUpdate("insert into users (first_name, id, sign_in_count) values (:second, :first, :first)", args);
 		User user = (User) CaffeineObject.find(User.class, 6);
 		assertEquals("id should match $1 arg", 6, user.getId());
 		assertEquals("sign_in_count should match $1 arg", 6, user.getSignInCount());

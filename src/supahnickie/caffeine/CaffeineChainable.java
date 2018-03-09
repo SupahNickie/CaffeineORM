@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  * Functions are called one after the other until your lookup is built, then the query is called using the execute() command.
  * 
  * @author Nicholas Case (nicholascase@live.com)
- * @version 5.3.0
+ * @version 1.0.0
  * @see <a href="https://github.com/SupahNickie/CaffeineORM/blob/master/README.md">README containing examples</a>
  * @see <a href="https://github.com/rails/rails/tree/master/activerecord">ActiveRecord, the inspiration for this project</a>
  */

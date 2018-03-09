@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,6 +33,23 @@ final class CaffeineParamReplacer {
 		return ps;
 	}
 
+	static final PreparedStatement replaceExactNamedParameters(Connection c, String sql, Map<String, Object> values) throws Exception {
+		PreparedStatement ps = null;
+		String patternString = "";
+		for (String key : values.keySet()) {
+			patternString = patternString + key + "|";
+		}
+		patternString = patternString.substring(0, patternString.length() - 1);
+		Pattern p = Pattern.compile(patternString);
+		Matcher m = p.matcher(sql);
+		List<String> allMatches = findAllNamedParameterPlaceholders(m);
+		Queue<Object> replacementVals = new LinkedList<Object>();
+		sql = insertAdditionalNamedExactParameterPlaceholders(sql, allMatches, values, replacementVals);
+		ps = c.prepareStatement(sql);
+		insertValuesIntoNamedParametersQuery(ps, replacementVals);
+		return ps;
+	}
+
 	private static final List<String> findAllNamedParameterPlaceholders(Matcher m) {
 		List<String> allMatches = new ArrayList<String>();
 		while (m.find()) { allMatches.add(m.group()); }
@@ -55,6 +73,25 @@ final class CaffeineParamReplacer {
 			}
 		}
 		sql = sql.replaceAll("\\$\\d*", "?");
+		return sql;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static final String insertAdditionalNamedExactParameterPlaceholders(String sql, List<String> allMatches, Map<String, Object> values, Queue<Object> replacementVals) {
+		for (String placeholder : allMatches) {
+			Object value = values.get(placeholder);
+			if ( isList(value) ) {
+				List<Object> vals = (List<Object>) value;
+				String arrayPlaceholder = "";
+				for (int i = 0; i < vals.size() - 1; i++) { arrayPlaceholder = arrayPlaceholder.concat("?, "); }
+				arrayPlaceholder = arrayPlaceholder.concat("?");
+				sql = sql.replaceFirst(placeholder, arrayPlaceholder);
+				for (int j = 0; j < vals.size(); j++) { replacementVals.add(vals.get(j)); }
+			} else {
+				replacementVals.add(value);
+				sql = sql.replaceFirst(placeholder, "?");
+			}
+		}
 		return sql;
 	}
 

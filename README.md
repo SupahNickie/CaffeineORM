@@ -127,6 +127,16 @@ CaffeineConnection.rawUpdate("insert into users set (favorite_number, sign_in_co
 CaffeineConnection.rawUpdate("insert into users set (favorite_number, sign_in_count, first_name, a_number_between_2_and_4) values ($2, $2, $1, $2)", "Grawr", 3);
 ```
 
+Named parameters can also be used in much the same manner as the JDBC style and bind variable style as well.
+```
+Map<String, Object> args = new HashMap<String, Object>();
+args.put(":first_name", "Paul");
+args.put(":last_name", "Bunyan");
+args.put(":suffix", "The Third");
+CaffeineConnection.rawQuery("select * from users where first_name = :first_name or last_name = :last_name and suffix = :suffix", args);
+// select * from users where first_name = 'Paul' or last_name = 'Bunyan' and suffix = 'The Third'
+```
+
 AR-like where with HashMap args and additional options.
 ```
 Map<String, Object> map = new HashMap<String, Object>();
